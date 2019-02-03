@@ -5,3 +5,15 @@
 The goal of Brief is to make it easier to package up arguments and pass them around. It also makes some attempt to normalize some soft-typing stuff, specifically w/r/t to type-coercion on the boolean value of non-boolean values--i.e., it always wants to use `===` not `==`. It is also intended to help in situations where you are looking for variables but can't be sure if they'll exist or not, and want to avoid errors when they can't be found. Yes, you can use `isset()` but this attempts to abstract that a little bit and save you a few keystrokes.
 
 If you're interested in the history and motivation of this project, it's an attempt to improve on and expand a small tool I made for myself to handle the above problem when dealing with Laravel Blade templates.
+
+## Functionality
+
+- Replicate all `Props` functionality 
+    - Recieve arrays of values
+    - Access values as dynamic properties
+    - Return bool `false` for unset values
+- `call` method, which invokes the passed `callable` (i.e. function name, method, anonymous/lambda function) with the arguments in a Brief
+    - `callUnpacked` method, which uses **[argument unpacking](https://secure.php.net/manual/en/migration56.new-features.php#migration56.new-features.splat)** to pass arguments to a function as separate variables instead of one Brief--useful when working w/ functions/methods that don't have Brief support.
+- Some way to define some properties about arguments:
+    - Argument order on output--necessary for methods like `callUnpacked` to work, possibly for other reasons.
+    - Expected arguments--again necessary for `callUnpacked`, but likely useful in other contexts too.

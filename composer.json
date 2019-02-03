@@ -13,5 +13,11 @@
             "name": "Ben Martinez-Bateman",
             "email": "ben@alwaysblank.org"
         }
-    ]
+    ],
+    "scripts": {
+        "test": "./vendor/bin/phpunit --bootstrap vendor/autoload.php --testdox tests"
+    },
+    "autoload": {
+        "psr-4": {"AlwaysBlank\\Brief\\": "src/"}
+    }
 }
