@@ -1,0 +1,17 @@
+{
+    "name": "alwaysblank/brief",
+    "description": "Present your arguments.",
+    "require": {
+        "tightenco/collect": "^5.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ben Martinez-Bateman",
+            "email": "ben@alwaysblank.org"
+        }
+    ]
+}
