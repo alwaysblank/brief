@@ -29,4 +29,55 @@ final class BriefTest extends TestCase
         $this->expectException(CannotSetProtectedKeyException::class);
         Brief::make(['protected' => 'value']);
     }
+
+    public function testCanGetValueViaProp(): void
+    {
+        $value = 'test value';
+        $Brief = Brief::make(['test' => $value]);
+        $this->assertEquals(
+            $value,
+            $Brief->test
+        );
+    }
+
+    public function testNonexistantKeysReturnBooleanFalse(): void
+    {
+        $Brief = Brief::make([]);
+        $this->assertFalse($Brief->fail);
+    }
+
+    public function testCallFunctionWithCallMethod(): void
+    {
+        function makeUppercase($Brief)
+        {
+            return strtoupper($Brief->test);
+        }
+
+        $original = 'test';
+        $result = strtoupper($original);
+
+        $Brief = Brief::make(['test' => $original]);
+        $this->assertEquals(
+            $result,
+            $Brief->call('makeUppercase')
+        );
+    }
+
+    public function testCallFunctionWithCallUnpackedMethod(): void
+    {
+        function makeConcatenated($one, $two)
+        {
+            return $one . $two;
+        }
+
+        $one = 'Star';
+        $two = 'Wars';
+        $result = $one . $two;
+
+        $Brief = Brief::make([$one, $two]);
+        $this->assertEquals(
+            $result,
+            $Brief->callUnpacked('makeConcatenated')
+        );
+    }
 }
