@@ -1,13 +1,10 @@
-<?php
-
-namespace AlwaysBlank\Brief;
+<?php namespace AlwaysBlank\Brief;
 
 use AlwaysBlank\Brief\Exceptions\CannotSetProtectedKeyException;
-use Tightenco\Collect\Support\Collection;
 
 class Brief
 {
-    private $arguments;
+    private $arguments = [];
 
     /**
      * A limited list of terms that cannot be used as argument keys.
@@ -18,7 +15,7 @@ class Brief
 
     protected function __construct($items = [])
     {
-        $this->arguments = new Collection($items);
+        $this->store($items);
     }
 
     /**
@@ -48,6 +45,41 @@ class Brief
         }
 
         return new self($items);
+    }
+
+    protected function storeSingle($value, string $key = null, int $order = null): self
+    {
+        if (false === $this::isKeyAllowed($key)) {
+            throw new CannotSetProtectedKeyException(
+                sprintf("The key `%s` is prohibited.", self::checkKeys($items))
+            );
+        }
+
+        /** 
+         * If no key is passed, use the order.
+         * Otherwise, it will overwrite any other item(s) passed
+         * without keys.
+         */
+        if (null === $key) {
+            $key = $this->getIncrementedOrder();
+        }
+
+        $this->arguments[$key] = [
+            'value' => $value, 
+            'order' => $order
+        ];
+
+        return $this;
+    }
+
+    protected function store(array $values, int $order_start = 0)
+    {
+        $i = $order_start;
+        foreach ($values as $key => $value) {
+            $this->storeSingle($value, $key, $i);
+            $i++;
+        }
+        return $this;
     }
 
     /**
@@ -108,6 +140,11 @@ class Brief
         return $this->getArgument($name);
     }
 
+    public function __set(string $name, $value)
+    {
+        $this->storeSingle($value, $name, $this->getIncrementedOrder());
+    }
+
     /**
      * Gets a value if the key exists, returns bool `false` otherwise.
      * 
@@ -119,7 +156,67 @@ class Brief
      */
     protected function getArgument($name)
     {
-        return $this->arguments->get($name, false);
+        return isset($this->arguments[$name]) 
+            ? $this->getValue($this->arguments[$name])
+            : false;
+    }
+
+    protected function getValue($item)
+    {
+        return isset($item['value'])
+            ? $item['value']
+            : false;
+    }
+
+    protected function getArgumentsSortedByOrder()
+    {
+        $rekeyed = array_column($this->arguments, null, 'order');
+        ksort($rekeyed);
+        return $rekeyed;
+    }
+
+    protected function getOrderLimit(string $which = 'start', string $returnOnly = null)
+    {
+        $ordered = $this->getArgumentsSortedByOrder();
+        if ('start' === $which) {
+            $limit = reset($ordered);
+        } else { // i.e. 'end'
+            $limit = end($ordered);
+        }
+        
+        if (null !== $returnOnly && isset($limit[$returnOnly])) {
+            return $limit[$returnOnly];
+        }
+
+        return $limit;
+    }
+
+    protected function getHighestOrder()
+    {
+        return $this->getOrderLimit('end', 'order');
+    }
+
+    protected function getLowestOrder()
+    {
+        return $this->getOrderLimit('start', 'order');
+    }
+
+    protected function getIncrementedOrder(): int
+    {
+        return $this->getHighestOrder() + 1;
+    }
+
+    protected function getFilledOrdered($return = null)
+    {
+        $orders = $this->getArgumentsSortedByOrder();
+        return array_map(function ($key) use ($orders, $return) {
+            return $orders[$key] ?? ['order' => $key, 'value' => $return];
+        }, range($this->getLowestOrder(), $this->getHighestOrder()));
+    }
+
+    public function getOrdered($return = null)
+    {
+        return array_column($this->getFilledOrdered($return), 'value', 'order');
     }
 
     public function call(callable $callable)
@@ -129,6 +226,6 @@ class Brief
 
     public function callUnpacked(callable $callable)
     {
-        return call_user_func_array($callable, $this->arguments->all());
+        return call_user_func_array($callable, $this->getOrdered());
     }
 }

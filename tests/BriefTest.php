@@ -80,4 +80,16 @@ final class BriefTest extends TestCase
             $Brief->callUnpacked('makeConcatenated')
         );
     }
+
+    public function testSetArgumentAfterInstantiation(): void
+    {
+        $value = 'value';
+        $Brief = Brief::make([]);
+        $Brief->test = $value;
+
+        $this->assertEquals(
+            $value,
+            $Brief->test
+        );
+    }
 }
