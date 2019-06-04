@@ -13,7 +13,7 @@ class Brief
      */
     static $protected = ['protected', 'arguments'];
 
-    protected function __construct($items = [])
+    public function __construct($items = [])
     {
         $this->store($items);
     }
