@@ -228,12 +228,32 @@ class Brief
         return array_column($this->getFilledOrdered($return), 'value', 'order');
     }
 
-    public function call(callable $callable)
+    /**
+     * Pass an unmodified Brief to an callable.
+     *
+     * If the callable does not understand Briefs or how to get arguments from objects,
+     * you should probably use `pass()` instead.
+     *
+     * @param callable $callable
+     *
+     * @return mixed
+     */
+    public function debrief(callable $callable)
     {
         return call_user_func($callable, $this);
     }
 
-    public function callUnpacked(callable $callable)
+    /**
+     * Pass the contents of a Brief as a series of arguments to callable.
+     *
+     * This method allows for Brief to easily interact with methods that do not know how to handle it
+     * specifically.
+     *
+     * @param callable $callable
+     *
+     * @return mixed
+     */
+    public function pass(callable $callable)
     {
         return call_user_func_array($callable, $this->getOrdered());
     }

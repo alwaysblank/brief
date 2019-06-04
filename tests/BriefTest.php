@@ -59,7 +59,7 @@ final class BriefTest extends TestCase
         $Brief = Brief::make(['test' => $original]);
         $this->assertEquals(
             $result,
-            $Brief->call('makeUppercase')
+            $Brief->debrief('makeUppercase')
         );
     }
 
@@ -77,7 +77,7 @@ final class BriefTest extends TestCase
         $Brief = Brief::make([$one, $two]);
         $this->assertEquals(
             $result,
-            $Brief->callUnpacked('makeConcatenated')
+            $Brief->pass('makeConcatenated')
         );
     }
 

@@ -14,8 +14,8 @@ If you're interested in the history and motivation of this project, it's an atte
     - Recieve arrays of values
     - Access values as dynamic properties
     - Return bool `false` for unset values
-- `call` method, which invokes the passed `callable` (i.e. function name, method, anonymous/lambda function) with the arguments in a Brief
-    - `callUnpacked` method, which uses **[argument unpacking](https://secure.php.net/manual/en/migration56.new-features.php#migration56.new-features.splat)** to pass arguments to a function as separate variables instead of one Brief--useful when working w/ functions/methods that don't have Brief support.
+- `debrief` method, which invokes the passed `callable` (i.e. function name, method, anonymous/lambda function) with the arguments in a Brief
+    - `pass` method, which uses **[argument unpacking](https://secure.php.net/manual/en/migration56.new-features.php#migration56.new-features.splat)** to pass arguments to a function as separate variables instead of one Brief--useful when working w/ functions/methods that don't have Brief support.
 - Some way to define some properties about arguments:
-    - Argument order on output--necessary for methods like `callUnpacked` to work, possibly for other reasons.
-    - Expected arguments--again necessary for `callUnpacked`, but likely useful in other contexts too.
+    - Argument order on output--necessary for methods like `pass` to work, possibly for other reasons.
+    - Expected arguments--again necessary for `pass`, but likely useful in other contexts too.
