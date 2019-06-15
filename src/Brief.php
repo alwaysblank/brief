@@ -1,6 +1,7 @@
 <?php namespace AlwaysBlank\Brief;
 
 use AlwaysBlank\Brief\Exceptions\CannotSetProtectedKeyException;
+use AlwaysBlank\Brief\Exceptions\WrongArgumentTypeException;
 
 class Brief
 {
@@ -9,13 +10,38 @@ class Brief
     /**
      * A limited list of terms that cannot be used as argument keys.
      *
-     * @var array
+     * @var array|object
      */
     static $protected = ['protected', 'arguments'];
 
     public function __construct($items = [])
     {
-        $this->store($items);
+        $this->store(self::normalizeInput($items));
+    }
+
+    /**
+     * Attempt to convert input to a format Brief understands.
+     *
+     * @param $items
+     *
+     * @return object|array|Brief
+     * @throws WrongArgumentTypeException
+     */
+    protected static function normalizeInput($items)
+    {
+        if (is_a($items, self::class)) {
+            return $items;
+        }
+
+        if (is_object($items) && count(get_object_vars($items)) > 0) {
+            return get_object_vars($items);
+        }
+
+        if ( ! is_array($items)) {
+            throw new WrongArgumentTypeException("Did not pass array or iterable object.");
+        }
+
+        return $items;
     }
 
     /**
@@ -27,24 +53,26 @@ class Brief
      * (so you can pass stuff to it without worrying about getting back
      * "nested" Briefs).
      *
-     * @param iterable|Brief $items
+     * @param iterable|object|Brief $items
      *
      * @return Brief
      * @throws CannotSetProtectedKeyException
+     * @throws WrongArgumentTypeException
      */
     public static function make($items): Brief
     {
-        if (empty($items)) {
+        $normalized = self::normalizeInput($items);
+        if (empty($normalized)) {
             return new self([]);
-        } elseif (is_a($items, self::class)) {
-            return $items;
-        } elseif (is_string(self::checkKeys($items))) {
+        } elseif (is_a($normalized, self::class)) {
+            return $normalized;
+        } elseif (is_string(self::checkKeys($normalized))) {
             throw new CannotSetProtectedKeyException(
-                sprintf("The key `%s` is prohibited.", self::checkKeys($items))
+                sprintf("The key `%s` is prohibited.", self::checkKeys($normalized))
             );
         }
 
-        return new self($items);
+        return new self($normalized);
     }
 
     protected function storeSingle($value, string $key = null, int $order = null): self

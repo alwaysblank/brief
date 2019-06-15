@@ -11,7 +11,8 @@ If you're interested in the history and motivation of this project, it's an atte
 ## Functionality
 
 - Replicate all `Props` functionality 
-    - Recieve arrays of values
+    - Receive arrays of values
+        - Also accepts an object w/ public properties
     - Access values as dynamic properties
     - Return bool `false` for unset values
 - `debrief` method, which invokes the passed `callable` (i.e. function name, method, anonymous/lambda function) with the arguments in a Brief

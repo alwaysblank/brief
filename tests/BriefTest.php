@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use AlwaysBlank\Brief\Brief;
 use AlwaysBlank\Brief\Exceptions\CannotSetProtectedKeyException;
+use AlwaysBlank\Brief\Exceptions\WrongArgumentTypeException;
 use PHPUnit\Framework\TestCase;
 
 final class BriefTest extends TestCase
@@ -24,10 +25,27 @@ final class BriefTest extends TestCase
         );
     }
 
+    public function testCanAcceptObjectAsArgument(): void
+    {
+        $Tester = Brief::make((object)['key' => 'value']);
+        $this->assertEquals(
+            $Tester->key,
+            'value'
+        );
+    }
+
     public function testAttemptingToUseProtectedKeysThrowsCorrectException(): void
     {
         $this->expectException(CannotSetProtectedKeyException::class);
         Brief::make(['protected' => 'value']);
+    }
+
+    public function testAttemptingToPassNonViableInputThrowsCorrectException(): void
+    {
+        $this->expectException(WrongArgumentTypeException::class);
+        Brief::make(1);
+        Brief::make('test');
+        Brief::make((object)[]);
     }
 
     public function testCanGetValueViaProp(): void
@@ -54,7 +72,7 @@ final class BriefTest extends TestCase
         }
 
         $original = 'test';
-        $result = strtoupper($original);
+        $result   = strtoupper($original);
 
         $Brief = Brief::make(['test' => $original]);
         $this->assertEquals(
@@ -70,8 +88,8 @@ final class BriefTest extends TestCase
             return $one . $two;
         }
 
-        $one = 'Star';
-        $two = 'Wars';
+        $one    = 'Star';
+        $two    = 'Wars';
         $result = $one . $two;
 
         $Brief = Brief::make([$one, $two]);
@@ -83,8 +101,8 @@ final class BriefTest extends TestCase
 
     public function testSetArgumentAfterInstantiation(): void
     {
-        $value = 'value';
-        $Brief = Brief::make([]);
+        $value       = 'value';
+        $Brief       = Brief::make([]);
         $Brief->test = $value;
 
         $this->assertEquals(
