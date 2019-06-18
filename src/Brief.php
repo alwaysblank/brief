@@ -257,6 +257,18 @@ class Brief
     }
 
     /**
+     * Get all arguments in this Brief as a keyed array.
+     *
+     * @return array
+     */
+    public function getKeyed()
+    {
+        return array_map(function ($block) {
+            return $block['value'];
+        }, $this->arguments);
+    }
+
+    /**
      * Pass an unmodified Brief to an callable.
      *
      * If the callable does not understand Briefs or how to get arguments from objects,
@@ -284,5 +296,26 @@ class Brief
     public function pass(callable $callable)
     {
         return call_user_func_array($callable, $this->getOrdered());
+    }
+
+    /**
+     * Very similar to Brief::pass(), but passes an array instead of a series of arguments.
+     *
+     * Passes a keyed array by default, but passing `false` to the second argument will pass
+     * an ordered numeric array instead.
+     *
+     * @param callable $callable
+     *
+     * @param bool     $keyed
+     *
+     * @return mixed
+     */
+    public function passArray(callable $callable, $keyed = true)
+    {
+        $arg = $keyed
+            ? $this->getKeyed()
+            : $this->getOrdered();
+
+        return call_user_func($callable, $arg);
     }
 }

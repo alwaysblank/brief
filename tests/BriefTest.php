@@ -110,4 +110,39 @@ final class BriefTest extends TestCase
             $Brief->test
         );
     }
+
+    public function testPassKeyedArrayToCalledFunction(): void
+    {
+        $array = [
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ];
+        $Brief = Brief::make($array);
+        $this->assertTrue($Brief->passArray(function ($array) {
+            return is_array($array) && isset($array['key1']);
+        }));
+    }
+
+    public function testPassOrderedArrayToCalledFunction(): void
+    {
+        $array = [
+            'value1',
+            'value2',
+        ];
+        $Brief = Brief::make($array);
+        $this->assertEquals(
+            $array,
+            $Brief->passArray(function ($array) {
+                $tmp = [];
+                foreach ($array as $value) {
+                    $tmp[] = $value;
+                }
+
+                return $tmp;
+            }, false)
+        );
+        $this->assertTrue($Brief->passArray(function ($array) {
+            return $array[0] === 'value1';
+        }));
+    }
 }
