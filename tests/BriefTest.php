@@ -145,4 +145,14 @@ final class BriefTest extends TestCase
             return $array[0] === 'value1';
         }));
     }
+
+    public function testIfItemIsSetInBrief(): void
+    {
+        $Brief =  Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
+        $this->assertTrue(isset($Brief->key1));
+        $this->assertFalse(isset($Brief->key3));
+    }
 }

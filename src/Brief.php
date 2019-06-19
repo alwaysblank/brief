@@ -150,7 +150,7 @@ class Brief
      */
     public function __isset($name)
     {
-        return in_array($name, $this->arguments->keys());
+        return in_array($name, array_keys($this->arguments));
     }
 
     /**
@@ -298,7 +298,7 @@ class Brief
         return call_user_func_array($callable, $this->getOrdered());
     }
 
-    /**
+    /**__
      * Very similar to Brief::pass(), but passes an array instead of a series of arguments.
      *
      * Passes a keyed array by default, but passing `false` to the second argument will pass
