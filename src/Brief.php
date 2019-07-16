@@ -37,6 +37,10 @@ class Brief
             return get_object_vars($items);
         }
 
+	if (null === $items || is_bool($items)) {
+	    return [];
+	}
+
         if ( ! is_array($items)) {
             throw new WrongArgumentTypeException("Did not pass array or iterable object.");
         }
