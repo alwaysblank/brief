@@ -20,3 +20,4 @@ If you're interested in the history and motivation of this project, it's an atte
 - Some way to define some properties about arguments:
     - Argument order on output--necessary for methods like `pass` to work, possibly for other reasons.
     - Expected arguments--again necessary for `pass`, but likely useful in other contexts too.
+- Allow for "fallback" keys when using `find` method.

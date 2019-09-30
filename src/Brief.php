@@ -37,9 +37,9 @@ class Brief
             return get_object_vars($items);
         }
 
-	if (null === $items || is_bool($items)) {
-	    return [];
-	}
+        if (null === $items || is_bool($items)) {
+            return [];
+        }
 
         if ( ! is_array($items)) {
             throw new WrongArgumentTypeException("Did not pass array or iterable object.");
@@ -321,5 +321,34 @@ class Brief
             : $this->getOrdered();
 
         return call_user_func($callable, $arg);
+    }
+
+    /**
+     * Pass an array of keys, and return the value for the first one that matches.
+     *
+     * @param array $keys
+     *
+     * @return bool
+     */
+    public function find($keys)
+    {
+        // Be friendly
+        if (is_string($keys)) {
+            return $this->getArgument($keys);
+        }
+
+        // ...Otherwise, it has to be an array
+        if ( ! is_array($keys)) {
+            return false;
+        }
+
+        // Prevent infinite recursion
+        if (empty($keys)) {
+            return false;
+        }
+
+        $get = array_shift($keys);
+
+        return $this->getArgument($get) ?: $this->find($keys);
     }
 }

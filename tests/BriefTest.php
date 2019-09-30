@@ -155,4 +155,50 @@ final class BriefTest extends TestCase
         $this->assertTrue(isset($Brief->key1));
         $this->assertFalse(isset($Brief->key3));
     }
+
+    public function testCanFindSingleKey(): void
+    {
+        $Brief =  Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
+        $this->assertEquals('value1', $Brief->find(['key1']));
+    }
+
+    public function testCanFindUnderstandString(): void
+    {
+        $Brief =  Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
+        $this->assertEquals('value1', $Brief->find('key1'));
+    }
+
+    public function testFindReturnsFalseIfNotGivenAnArrayOrString(): void
+    {
+        $Brief =  Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
+        $this->assertFalse($Brief->find(2));
+        $this->assertFalse($Brief->find(new Brief([])));
+    }
+
+    public function testCanFindFallbackKey(): void
+    {
+        $Brief =  Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
+        $this->assertEquals('value2', $Brief->find(['nonexistant', 'key2']));
+    }
+
+    public function testReturnFalseIfCannotFindAnyKey(): void
+    {
+        $Brief =  Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
+        $this->assertFalse($Brief->find(['a', 'b', 'c', 'd']));
+    }
 }
