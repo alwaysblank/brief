@@ -276,12 +276,27 @@ final class BriefTest extends TestCase
 
     public function testSetValueThroughAlias(): void
     {
-        $Brief = Brief::make([], ['aliases' => ['real_key' => ['pointer']]]);
+        $Brief          = Brief::make([], ['aliases' => ['real_key' => ['pointer']]]);
         $Brief->pointer = 'value';
         $this->assertEquals('value', $Brief->real_key);
         $this->assertEquals('value', $Brief->pointer);
         $Brief->real_key = 'new value';
         $this->assertEquals('new value', $Brief->real_key);
         $this->assertEquals('new value', $Brief->pointer);
+    }
+
+    public function testAliasKeysAtInstationation(): void
+    {
+        $Brief = Brief::make([
+            'pointer' => 'the value',
+        ], [
+            'aliases' => [
+                'key1' => ['pointer'],
+            ]
+        ]);
+
+        $this->assertEquals($Brief->key1, $Brief->pointer, "Value for alias and key do not match");
+        $this->assertEquals('the value', $Brief->key1, "The key does not return the correct value");
+        $this->assertEquals('the value', $Brief->pointer, "The alias does not return the correct value");
     }
 }

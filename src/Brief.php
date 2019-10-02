@@ -31,8 +31,8 @@ class Brief
      */
     public function __construct($items = [], array $settings = [])
     {
-        $this->store(self::normalizeInput($items));
         $this->parseSettings($settings);
+        $this->store(self::normalizeInput($items));
     }
 
     /**
@@ -122,6 +122,12 @@ class Brief
         }
         $compiled = [];
         foreach ($aliases as $key => $terms) {
+            if (is_string($terms)) {
+                $terms = [$terms];
+            }
+            if ( ! is_array($terms)) {
+                continue;
+            }
             $compiled = array_merge($compiled, array_fill_keys(array_values($terms), $key));
         }
         $this->aliases = array_merge($this->aliases, $compiled);
@@ -175,6 +181,12 @@ class Brief
          */
         if (null === $key) {
             $key = $this->getIncrementedOrder();
+        } /**
+         * This allows us to pass aliased terms directly at instantiation,
+         * if a settings array defining them is passed at instantiation as well.
+         */
+        elseif (isset($this->aliases[$key])) {
+            $key = $this->getAuthoritativeName($key) ?? $key;
         }
 
         $this->arguments[$key] = [
