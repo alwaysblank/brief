@@ -22,4 +22,4 @@ If you're interested in the history and motivation of this project, it's an atte
     - Expected arguments--again necessary for `pass`, but likely useful in other contexts too.
 - Allow for "fallback" keys when using `find` method.
 - System for modifying Brief behavior through a `settings` array passed at instantiation.
-- Allow for key aliases via `settings`.
+- Allow for key aliases via `settings`. Aliases support both getting and setting.

@@ -153,7 +153,7 @@ class Brief
 
     public function getAliasedKey(string $alias)
     {
-        if (!isset($this->aliases[$alias])) {
+        if ( ! isset($this->aliases[$alias])) {
             return false;
         }
 
@@ -255,13 +255,22 @@ class Brief
      */
     public function __get($name)
     {
-        return $this->getArgument($name) ?: $this->getArgument($this->getAliasedKey($name));
+        return $this->getArgument($this->getAuthoritativeName($name));
     }
 
+    /**
+     * Allows you to set a value dynamically: `$Brief->newValue = 'something';`.
+     *
+     * This respects aliases, so if you set something making it impossible to create a new key with the name of an
+     * alias you have for another key.
+     *
+     * @param string $name
+     * @param        $value
+     */
     public function __set(string $name, $value)
     {
         try {
-            $this->storeSingle($value, $name, $this->getIncrementedOrder());
+            $this->storeSingle($value, $this->getAuthoritativeName($name) ?? $name, $this->getIncrementedOrder());
         } catch (CannotSetProtectedKeyException $e) {
             echo "Could not set this value: " . $e->getMessage();
         }
@@ -279,6 +288,25 @@ class Brief
         return isset($this->arguments[$name])
             ? $this->getValue($this->arguments[$name])
             : false;
+    }
+
+    /**
+     * This will get the authoritative name (either the key, or the key that the passed alias points to).
+     *
+     * This returns null, *not* bool false, so that it will always cause `isset()` to return bool false when used
+     * against an array (since an array row can't have a key of `null`).
+     *
+     * @param $name
+     *
+     * @return string|null
+     */
+    protected function getAuthoritativeName($name)
+    {
+        if (isset($this->arguments[$name])) {
+            return $name;
+        }
+
+        return $this->getAliasedKey($name) ?: null;
     }
 
     protected function getValue($item)

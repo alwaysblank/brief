@@ -273,4 +273,15 @@ final class BriefTest extends TestCase
         ]);
         $this->assertFalse($Brief->getAliasedKey('key1'));
     }
+
+    public function testSetValueThroughAlias(): void
+    {
+        $Brief = Brief::make([], ['aliases' => ['real_key' => ['pointer']]]);
+        $Brief->pointer = 'value';
+        $this->assertEquals('value', $Brief->real_key);
+        $this->assertEquals('value', $Brief->pointer);
+        $Brief->real_key = 'new value';
+        $this->assertEquals('new value', $Brief->real_key);
+        $this->assertEquals('new value', $Brief->pointer);
+    }
 }
