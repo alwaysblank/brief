@@ -148,7 +148,7 @@ final class BriefTest extends TestCase
 
     public function testIfItemIsSetInBrief(): void
     {
-        $Brief =  Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -158,7 +158,7 @@ final class BriefTest extends TestCase
 
     public function testCanFindSingleKey(): void
     {
-        $Brief =  Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -167,7 +167,7 @@ final class BriefTest extends TestCase
 
     public function testCanFindUnderstandString(): void
     {
-        $Brief =  Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -176,7 +176,7 @@ final class BriefTest extends TestCase
 
     public function testFindReturnsFalseIfNotGivenAnArrayOrString(): void
     {
-        $Brief =  Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -186,7 +186,7 @@ final class BriefTest extends TestCase
 
     public function testCanFindFallbackKey(): void
     {
-        $Brief =  Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -195,10 +195,82 @@ final class BriefTest extends TestCase
 
     public function testReturnFalseIfCannotFindAnyKey(): void
     {
-        $Brief =  Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
         $this->assertFalse($Brief->find(['a', 'b', 'c', 'd']));
+    }
+
+    public function testCanSetAlias(): void
+    {
+        $Brief  = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => ['key1' => ['uno', 'eins']],
+        ]);
+        $Brief2 = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'alias' => ['key1' => ['uno', 'eins']],
+        ]);
+        $this->assertEquals('key1', $Brief->getAliasedKey('uno'));
+        $this->assertEquals('key1', $Brief->getAliasedKey('eins'));
+        $this->assertEquals('key1', $Brief2->getAliasedKey('uno'));
+        $this->assertEquals('key1', $Brief2->getAliasedKey('eins'));
+    }
+
+    public function testCanGetValueFromAliasedKey(): void
+    {
+        $Brief = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => ['key1' => ['uno', 'eins']],
+        ]);
+        $this->assertEquals('value1', $Brief->uno);
+        $this->assertEquals('value1', $Brief->eins);
+    }
+
+    public function testCanGetValueFromAliasedKeyString(): void
+    {
+        $Brief = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => [
+                'key1' => ['eins'],
+                'eins' => ['uno'],
+            ],
+        ]);
+        $this->assertEquals('value1', $Brief->uno);
+    }
+
+    public function testCannotCreateInfiniteLoopOfAliases(): void
+    {
+        $Brief = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => [
+                'uno'  => ['eins'],
+                'eins' => ['uno'],
+            ],
+        ]);
+        $this->assertFalse($Brief->uno);
+        $this->assertFalse($Brief->eins);
+    }
+
+    public function testAliasReturnsFalseIfPassedAuthoritativeKey(): void
+    {
+        $Brief = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => ['key1' => ['uno', 'eins']],
+        ]);
+        $this->assertFalse($Brief->getAliasedKey('key1'));
     }
 }

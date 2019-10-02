@@ -12,11 +12,27 @@ class Brief
      *
      * @var array|object
      */
-    static $protected = ['protected', 'arguments'];
+    static $protected = ['protected', 'arguments', 'aliases'];
 
-    public function __construct($items = [])
+    /**
+     * An array of aliases for internal terms. The key is the alias; the value is the internal key.
+     *
+     * @var array
+     */
+    protected $aliases = [];
+
+    /**
+     * Brief constructor.
+     *
+     * @param array $items
+     * @param array $settings
+     *
+     * @throws WrongArgumentTypeException
+     */
+    public function __construct($items = [], array $settings = [])
     {
         $this->store(self::normalizeInput($items));
+        $this->parseSettings($settings);
     }
 
     /**
@@ -59,15 +75,17 @@ class Brief
      *
      * @param iterable|object|Brief $items
      *
+     * @param array                 $settings
+     *
      * @return Brief
      * @throws CannotSetProtectedKeyException
      * @throws WrongArgumentTypeException
      */
-    public static function make($items): Brief
+    public static function make($items, array $settings = []): Brief
     {
         $normalized = self::normalizeInput($items);
         if (empty($normalized)) {
-            return new self([]);
+            return new self([], $settings);
         } elseif (is_a($normalized, self::class)) {
             return $normalized;
         } elseif (is_string(self::checkKeys($normalized))) {
@@ -76,7 +94,70 @@ class Brief
             );
         }
 
-        return new self($normalized);
+        return new self($normalized, $settings);
+    }
+
+    public function parseSettings(array $settings)
+    {
+        if (empty($settings)) {
+            return;
+        }
+
+        foreach ($settings as $key => $arg) {
+            switch ($key) {
+                case 'aliases':
+                case 'alias':
+                    $this->parseAliasSetting($arg);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public function parseAliasSetting($aliases)
+    {
+        if (empty($aliases)) {
+            return;
+        }
+        $compiled = [];
+        foreach ($aliases as $key => $terms) {
+            $compiled = array_merge($compiled, array_fill_keys(array_values($terms), $key));
+        }
+        $this->aliases = array_merge($this->aliases, $compiled);
+    }
+
+    protected function collapseAliasChain(string $alias, $chain = [])
+    {
+        if (
+            empty($this->aliases) // No aliases, so this can't ever return a value
+            || (count($chain) > count($this->aliases)) // This seems like an infinite loop
+        ) {
+            return false;
+        }
+
+        // Make sure chain has something to pop (if this is the first iteration)
+        if (empty($chain) === $chain) {
+            $chain[] = $alias;
+        }
+
+        // We've reached the bottom of the chain
+        if ( ! isset($this->aliases[$alias])) {
+            return array_pop($chain);
+        }
+
+        $chain[] = $this->aliases[$alias];
+
+        return $this->collapseAliasChain($this->aliases[$alias], $chain);
+    }
+
+    public function getAliasedKey(string $alias)
+    {
+        if (!isset($this->aliases[$alias])) {
+            return false;
+        }
+
+        return $this->collapseAliasChain($alias);
     }
 
     protected function storeSingle($value, string $key = null, int $order = null): self
@@ -174,7 +255,7 @@ class Brief
      */
     public function __get($name)
     {
-        return $this->getArgument($name);
+        return $this->getArgument($name) ?: $this->getArgument($this->getAliasedKey($name));
     }
 
     public function __set(string $name, $value)
