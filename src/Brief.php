@@ -168,18 +168,7 @@ class Brief
             );
         }
 
-        /**
-         * If no key is passed, use the order.
-         * Otherwise, it will overwrite any other item(s) passed
-         * without keys.
-         */
-        if (null === $key) {
-            $key = $this->getIncrementedOrder();
-        } /**
-         * This allows us to pass aliased terms directly at instantiation,
-         * if a settings array defining them is passed at instantiation as well.
-         */
-        elseif (isset($this->aliases[$key])) {
+        if (isset($this->aliases[$key])) {
             $key = $this->getAuthoritativeName($key) ?? $key;
         }
 
