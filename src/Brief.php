@@ -109,8 +109,6 @@ class Brief
                 case 'alias':
                     $this->parseAliasSetting($arg);
                     break;
-                default:
-                    break;
             }
         }
     }
