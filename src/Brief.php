@@ -88,10 +88,6 @@ class Brief
             return new self([], $settings);
         } elseif (is_a($normalized, self::class)) {
             return $normalized;
-        } elseif (is_string(self::checkKeys($normalized))) {
-            throw new CannotSetProtectedKeyException(
-                sprintf("The key `%s` is prohibited.", self::checkKeys($normalized))
-            );
         }
 
         return new self($normalized, $settings);
@@ -206,23 +202,6 @@ class Brief
         return $this;
     }
 
-    /**
-     * Checks array keys to make sure there are not forbidden keys.
-     *
-     * @param array $items
-     *
-     * @return bool|string
-     */
-    public static function checkKeys(iterable $items)
-    {
-        foreach (array_keys($items) as $key) {
-            if (false === self::isKeyAllowed($key)) {
-                return $key;
-            }
-        }
-
-        return true;
-    }
 
     /**
      * Checks an individual key to see if it is allowed.
