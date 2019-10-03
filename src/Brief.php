@@ -111,7 +111,7 @@ class Brief
 
     public function parseAliasSetting($aliases)
     {
-        if (empty($aliases)) {
+        if (empty($aliases) || ! is_array($aliases)) {
             return;
         }
         $compiled = [];
