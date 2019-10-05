@@ -40,6 +40,13 @@ final class BriefTest extends TestCase
         Brief::make(['protected' => 'value']);
     }
 
+    public function testAttemptingToUseProtectedKeyToDynamicallySetValueThrowsCorrectException(): void
+    {
+
+        $this->expectOutputString("Could not set this value: The key `protected` is prohibited.");
+        Brief::make([])->protected = 'value';
+    }
+
     public function testAttemptingToPassNonViableInputThrowsCorrectException(): void
     {
         $this->expectException(WrongArgumentTypeException::class);
@@ -308,7 +315,7 @@ final class BriefTest extends TestCase
 
     public function testAllowStringInsteadOfArrayForAliasArgument(): void
     {
-        $Brief  = Brief::make([
+        $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ], [
@@ -325,7 +332,7 @@ final class BriefTest extends TestCase
         ], [
             'aliases' => [[], 3],
         ]);
-        $Brief2  = Brief::make([
+        $Brief2 = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ], [
