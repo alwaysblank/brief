@@ -40,12 +40,25 @@ final class BriefTest extends TestCase
         Brief::make(['protected' => 'value']);
     }
 
+    public function testAttemptingToUseProtectedKeyToDynamicallySetValueThrowsCorrectException(): void
+    {
+
+        $this->expectOutputString("Could not set this value: The key `protected` is prohibited.");
+        Brief::make([])->protected = 'value';
+    }
+
     public function testAttemptingToPassNonViableInputThrowsCorrectException(): void
     {
         $this->expectException(WrongArgumentTypeException::class);
         Brief::make(1);
         Brief::make('test');
         Brief::make((object)[]);
+    }
+
+    public function testAttempingToPassBooleanAsInputCreatesEmptyBrief(): void
+    {
+        $Brief = Brief::make(true);
+        $this->assertEmpty($Brief->getKeyed());
     }
 
     public function testCanGetValueViaProp(): void
@@ -298,5 +311,34 @@ final class BriefTest extends TestCase
         $this->assertEquals($Brief->key1, $Brief->pointer, "Value for alias and key do not match");
         $this->assertEquals('the value', $Brief->key1, "The key does not return the correct value");
         $this->assertEquals('the value', $Brief->pointer, "The alias does not return the correct value");
+    }
+
+    public function testAllowStringInsteadOfArrayForAliasArgument(): void
+    {
+        $Brief = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => ['key1' => 'uno'],
+        ]);
+        $this->assertEquals('key1', $Brief->getAliasedKey('uno'));
+    }
+
+    public function testAliasSettingParseNoResults(): void
+    {
+        $Brief  = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => [[], 3],
+        ]);
+        $Brief2 = Brief::make([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ], [
+            'aliases' => [],
+        ]);
+        $this->assertEquals('value1', $Brief->key1);
+        $this->assertEquals('value1', $Brief2->key1);
     }
 }

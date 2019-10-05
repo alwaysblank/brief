@@ -88,10 +88,6 @@ class Brief
             return new self([], $settings);
         } elseif (is_a($normalized, self::class)) {
             return $normalized;
-        } elseif (is_string(self::checkKeys($normalized))) {
-            throw new CannotSetProtectedKeyException(
-                sprintf("The key `%s` is prohibited.", self::checkKeys($normalized))
-            );
         }
 
         return new self($normalized, $settings);
@@ -109,15 +105,13 @@ class Brief
                 case 'alias':
                     $this->parseAliasSetting($arg);
                     break;
-                default:
-                    break;
             }
         }
     }
 
     public function parseAliasSetting($aliases)
     {
-        if (empty($aliases)) {
+        if (empty($aliases) || ! is_array($aliases)) {
             return;
         }
         $compiled = [];
@@ -135,21 +129,31 @@ class Brief
 
     protected function collapseAliasChain(string $alias, $chain = [])
     {
-        if (
-            empty($this->aliases) // No aliases, so this can't ever return a value
-            || (count($chain) > count($this->aliases)) // This seems like an infinite loop
-        ) {
+        if (count($chain) > count($this->aliases)) {
+            // This seems like an infinite loop
             return false;
         }
 
-        // Make sure chain has something to pop (if this is the first iteration)
-        if (empty($chain) === $chain) {
-            $chain[] = $alias;
-        }
-
-        // We've reached the bottom of the chain
+        /**
+         * This handles both the end of the chain *and* attempting to call
+         * aliases that don't exist.
+         */
         if ( ! isset($this->aliases[$alias])) {
-            return array_pop($chain);
+            $final = array_pop($chain);
+            if (is_string($final)) {
+                /**
+                 * This means we've reached the end of a valid chain, and can return
+                 * a final value.
+                 */
+                return $final;
+            }
+
+            /**
+             * This means that either this was called on an alias that does not
+             * exist, so on the first loop the chain is empty and the alias is
+             * unset or (much less likely) the alias points to a non-string value.
+             */
+            return false;
         }
 
         $chain[] = $this->aliases[$alias];
@@ -159,10 +163,6 @@ class Brief
 
     public function getAliasedKey(string $alias)
     {
-        if ( ! isset($this->aliases[$alias])) {
-            return false;
-        }
-
         return $this->collapseAliasChain($alias);
     }
 
@@ -174,18 +174,7 @@ class Brief
             );
         }
 
-        /**
-         * If no key is passed, use the order.
-         * Otherwise, it will overwrite any other item(s) passed
-         * without keys.
-         */
-        if (null === $key) {
-            $key = $this->getIncrementedOrder();
-        } /**
-         * This allows us to pass aliased terms directly at instantiation,
-         * if a settings array defining them is passed at instantiation as well.
-         */
-        elseif (isset($this->aliases[$key])) {
+        if (isset($this->aliases[$key])) {
             $key = $this->getAuthoritativeName($key) ?? $key;
         }
 
@@ -208,23 +197,6 @@ class Brief
         return $this;
     }
 
-    /**
-     * Checks array keys to make sure there are not forbidden keys.
-     *
-     * @param array $items
-     *
-     * @return bool|string
-     */
-    public static function checkKeys(iterable $items)
-    {
-        foreach (array_keys($items) as $key) {
-            if (false === self::isKeyAllowed($key)) {
-                return $key;
-            }
-        }
-
-        return true;
-    }
 
     /**
      * Checks an individual key to see if it is allowed.
