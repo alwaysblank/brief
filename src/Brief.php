@@ -129,21 +129,31 @@ class Brief
 
     protected function collapseAliasChain(string $alias, $chain = [])
     {
-        if (
-            empty($this->aliases) // No aliases, so this can't ever return a value
-            || (count($chain) > count($this->aliases)) // This seems like an infinite loop
-        ) {
+        if (count($chain) > count($this->aliases)) {
+            // This seems like an infinite loop
             return false;
         }
 
-        // Make sure chain has something to pop (if this is the first iteration)
-        if (empty($chain) === $chain) {
-            $chain[] = $alias;
-        }
-
-        // We've reached the bottom of the chain
+        /**
+         * This handles both the end of the chain *and* attempting to call
+         * aliases that don't exist.
+         */
         if ( ! isset($this->aliases[$alias])) {
-            return array_pop($chain);
+            $final = array_pop($chain);
+            if (is_string($final)) {
+                /**
+                 * This means we've reached the end of a valid chain, and can return
+                 * a final value.
+                 */
+                return $final;
+            }
+
+            /**
+             * This means that either this was called on an alias that does not
+             * exist, so on the first loop the chain is empty and the alias is
+             * unset or (much less likely) the alias points to a non-string value.
+             */
+            return false;
         }
 
         $chain[] = $this->aliases[$alias];
@@ -153,10 +163,6 @@ class Brief
 
     public function getAliasedKey(string $alias)
     {
-        if ( ! isset($this->aliases[$alias])) {
-            return false;
-        }
-
         return $this->collapseAliasChain($alias);
     }
 
