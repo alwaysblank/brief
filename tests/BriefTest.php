@@ -341,4 +341,11 @@ final class BriefTest extends TestCase
         $this->assertEquals('value1', $Brief->key1);
         $this->assertEquals('value1', $Brief2->key1);
     }
+
+    public function testCreateEmptyBrief(): void
+    {
+        $Empty = Brief::empty();
+        $this->assertInstanceOf(\AlwaysBlank\Brief\EmptyBrief::class, $Empty);
+        $this->assertFalse($Empty->anything);
+    }
 }

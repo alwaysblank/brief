@@ -23,3 +23,4 @@ If you're interested in the history and motivation of this project, it's an atte
 - Allow for "fallback" keys when using `find` method.
 - System for modifying Brief behavior through a `settings` array passed at instantiation.
 - Allow for key aliases via `settings`. Aliases support both getting and setting.
+- Create an empty Brief that won't throw Exceptions on instantiation with `Brief::empty()`, `new EmptyBrief()`, or `EmptyBrief::make()`.

@@ -36,6 +36,18 @@ class Brief
     }
 
     /**
+     * Creates an empty Brief, CANNOT throw WrongArgumentException.
+     *
+     * @param array $settings
+     *
+     * @return EmptyBrief
+     */
+    public static function empty(array $settings = [])
+    {
+        return new EmptyBrief($settings);
+    }
+
+    /**
      * Attempt to convert input to a format Brief understands.
      *
      * @param $items
@@ -78,7 +90,6 @@ class Brief
      * @param array                 $settings
      *
      * @return Brief
-     * @throws CannotSetProtectedKeyException
      * @throws WrongArgumentTypeException
      */
     public static function make($items, array $settings = []): Brief
