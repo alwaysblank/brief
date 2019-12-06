@@ -455,4 +455,41 @@ class Brief
 
         return $this->getArgument($get) ?: $this->find($keys);
     }
+
+    /**
+     * Call a callable on each item of this Brief.
+     *
+     * This acts directly on the Brief on which it is called, and returns that
+     * Brief. Be careful; this means that your original Brief is changed. If you
+     * want a copy of your Brief, use map().
+     *
+     * @param callable $callable
+     *
+     * @return Brief
+     */
+    public function transform(callable $callable)
+    {
+        foreach($this->arguments as $key => $value) {
+            $callable($value, $key, $this);
+        }
+        return $this;
+    }
+
+    /**
+     * Call a callable on each item of a copy of this Brief.
+     *
+     * This acts on a copy of the Brief on which it is called, and returns the
+     * new Brief, leaving the original unmodified. If you don't want this
+     * behavior, use transform().
+     *
+     * @param callable $callable
+     *
+     * @return Brief
+     * @throws WrongArgumentTypeException
+     */
+    public function map(callable $callable)
+    {
+        $New = clone $this;
+        return $New->transform($callable);
+    }
 }

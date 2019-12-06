@@ -24,3 +24,4 @@ If you're interested in the history and motivation of this project, it's an atte
 - System for modifying Brief behavior through a `settings` array passed at instantiation.
 - Allow for key aliases via `settings`. Aliases support both getting and setting.
 - Create an empty Brief that won't throw Exceptions on instantiation with `Brief::empty()`, `new EmptyBrief()`, or `EmptyBrief::make()`.
+- Iterate over every top-level item in a Brief with `map()` and `transform()`.

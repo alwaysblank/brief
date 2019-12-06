@@ -348,4 +348,37 @@ final class BriefTest extends TestCase
         $this->assertInstanceOf(\AlwaysBlank\Brief\EmptyBrief::class, $Empty);
         $this->assertFalse($Empty->anything);
     }
+
+    public function testConvertItemsInBriefWithTransform(): void
+    {
+        $Brief  = Brief::make([
+            'key1' => ['nested1' => 'value1'],
+            'key2' => ['nested2' => 'value2'],
+        ]);
+
+        $Returned = $Brief->transform(function($value, $key, $instance) {
+           $instance->$key = Brief::make($value);
+        });
+
+        $this->assertInstanceOf(Brief::class, $Brief->key1);
+        $this->assertInstanceOf(Brief::class, $Brief->key2);
+        $this->assertEquals($Returned, $Brief);
+    }
+
+    public function testConvertItemsIntoNewBriefWithMap(): void
+    {
+        $Brief  = Brief::make([
+            'key1' => ['nested1' => 'value1'],
+            'key2' => ['nested2' => 'value2'],
+        ]);
+
+        $Returned = $Brief->map(function($value, $key, $instance) {
+            $instance->$key = Brief::make($value);
+        });
+
+        $this->assertInstanceOf(Brief::class, $Returned->key1);
+        $this->assertInstanceOf(Brief::class, $Returned->key2);
+        $this->assertNotEquals($Returned, $Brief);
+
+    }
 }
