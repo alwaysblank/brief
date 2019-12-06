@@ -459,6 +459,9 @@ class Brief
     /**
      * Call a callable on each item of this Brief.
      *
+     * This is method is intended for use with keyed arguments. Ordered
+     * arguments may produce strange results.
+     *
      * This acts directly on the Brief on which it is called, and returns that
      * Brief. Be careful; this means that your original Brief is changed. If you
      * want a copy of your Brief, use map().
@@ -469,7 +472,7 @@ class Brief
      */
     public function transform(callable $callable)
     {
-        foreach($this->arguments as $key => $value) {
+        foreach($this->getKeyed() as $key => $value) {
             $callable($value, $key, $this);
         }
         return $this;
@@ -477,6 +480,9 @@ class Brief
 
     /**
      * Call a callable on each item of a copy of this Brief.
+     *
+     * This is method is intended for use with keyed arguments. Ordered
+     * arguments may produce strange results.
      *
      * This acts on a copy of the Brief on which it is called, and returns the
      * new Brief, leaving the original unmodified. If you don't want this

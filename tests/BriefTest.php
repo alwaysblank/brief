@@ -362,6 +362,8 @@ final class BriefTest extends TestCase
 
         $this->assertInstanceOf(Brief::class, $Brief->key1);
         $this->assertInstanceOf(Brief::class, $Brief->key2);
+        $this->assertEquals('value1', $Brief->key1->nested1);
+        $this->assertEquals('value2', $Brief->key2->nested2);
         $this->assertEquals($Returned, $Brief);
     }
 
@@ -378,6 +380,8 @@ final class BriefTest extends TestCase
 
         $this->assertInstanceOf(Brief::class, $Returned->key1);
         $this->assertInstanceOf(Brief::class, $Returned->key2);
+        $this->assertEquals('value1', $Returned->key1->nested1);
+        $this->assertEquals('value2', $Returned->key2->nested2);
         $this->assertNotEquals($Returned, $Brief);
 
     }
