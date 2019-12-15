@@ -1,0 +1,67 @@
+= Brief 📂📂📂
+:Date: 12/15/2019
+:Revision: 2.0.0-alpha
+:Author: Ben Martinez-Bateman
+:Email: ben@alwaysblank.org
+:toc: macro
+:toclevels: 6
+:toc-title:
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+ifndef::env-github[]
+:tip-caption: 💡
+:note-caption: ℹ
+:important-caption: ❗
+:caution-caption: 🔥
+:warning-caption: ⚠
+endif::[]
+
+**Present your arguments.**
+
+image:https://travis-ci.org/alwaysblank/brief.svg?branch=master["Build Status", link="https://travis-ci.org/alwaysblank/brief"]
+
+toc::[]
+
+== What Is This?
+
+It's a simple little tool for passing around collections of variable stuctured data.
+
+90% of the reason I built it was because I got very tired of writing `isset()`, etc, conditionals when _the nonexistence of a key was equivalent to a falsey value in terms of program flow_.
+It grew from there to provide some other functionality related to moving collections of structure data around.
+I find it particularly useful when templating with https://laravel.com/docs/5.8/blade[Laravel Blade].
+
+(Brief is only one way to solve the issues I might use here as examples:
+It's not intended to be an authoritative or "best" solution, merely a convenient one, if you find it convenient.)
+
+== How Does It Work?
+
+[source,php]
+----
+$Brief = Brief::make([
+    'key' => 'value',
+]);
+
+$Brief->key;
+// 'value'
+
+$Breif->doesnt_exist;
+// null
+----
+
+Instead of throwing an error or exception, Brief will return `null` if a key does not have an associated value.
+
+[NOTE]
+====
+You can also create a Brief with `new`, `make()` is just slightly more concise:
+[source,php]
+----
+$Brief = new Brief([
+    'key' => 'value',
+]);
+----
+====
