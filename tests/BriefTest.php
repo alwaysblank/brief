@@ -71,10 +71,10 @@ final class BriefTest extends TestCase
         );
     }
 
-    public function testNonexistantKeysReturnBooleanFalse(): void
+    public function testNonexistantKeysReturnNull(): void
     {
         $Brief = Brief::make([]);
-        $this->assertFalse($Brief->fail);
+        $this->assertNull($Brief->fail);
     }
 
     public function testCallFunctionWithCallMethod(): void
@@ -187,14 +187,14 @@ final class BriefTest extends TestCase
         $this->assertEquals('value1', $Brief->find('key1'));
     }
 
-    public function testFindReturnsFalseIfNotGivenAnArrayOrString(): void
+    public function testFindReturnsNullIfNotGivenAnArrayOrString(): void
     {
         $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
-        $this->assertFalse($Brief->find(2));
-        $this->assertFalse($Brief->find(new Brief([])));
+        $this->assertNull($Brief->find(2));
+        $this->assertNull($Brief->find(new Brief([])));
     }
 
     public function testCanFindFallbackKey(): void
@@ -206,13 +206,13 @@ final class BriefTest extends TestCase
         $this->assertEquals('value2', $Brief->find(['nonexistant', 'key2']));
     }
 
-    public function testReturnFalseIfCannotFindAnyKey(): void
+    public function testReturnNullIfCannotFindAnyKey(): void
     {
         $Brief = Brief::make([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
-        $this->assertFalse($Brief->find(['a', 'b', 'c', 'd']));
+        $this->assertNull($Brief->find(['a', 'b', 'c', 'd']));
     }
 
     public function testCanSetAlias(): void
@@ -272,8 +272,8 @@ final class BriefTest extends TestCase
                 'eins' => ['uno'],
             ],
         ]);
-        $this->assertFalse($Brief->uno);
-        $this->assertFalse($Brief->eins);
+        $this->assertNull($Brief->uno);
+        $this->assertNull($Brief->eins);
     }
 
     public function testAliasReturnsFalseIfPassedAuthoritativeKey(): void
@@ -346,7 +346,7 @@ final class BriefTest extends TestCase
     {
         $Empty = Brief::empty();
         $this->assertInstanceOf(\AlwaysBlank\Brief\EmptyBrief::class, $Empty);
-        $this->assertFalse($Empty->anything);
+        $this->assertNull($Empty->anything);
     }
 
     public function testConvertItemsInBriefWithTransform(): void

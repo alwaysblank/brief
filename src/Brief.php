@@ -162,7 +162,7 @@ class Brief
             /**
              * This means that either this was called on an alias that does not
              * exist, so on the first loop the chain is empty and the alias is
-             * unset or (much less likely) the alias points to a non-string value.
+             * unset, or (much less likely) the alias points to a non-string value.
              */
             return false;
         }
@@ -234,15 +234,8 @@ class Brief
     }
 
     /**
-     * Get the value of a key if it is set; return false otherwise.
+     * Get the value of a key if it is set; return null otherwise.
      *
-     * In the case where a key has the value of bool `false`, this will always return
-     * the same value, as the "true" value is `false`. In this case, if you wanted to
-     * be certain you were retrieving an actual value, you would need to do something
-     * like this:
-     * ```
-     * return isset($Brief->valueSetToFalse) ? $Brief->valueSetToFalse : 'value is not set';
-     * ```
      *
      * @param string $name
      *
@@ -272,7 +265,7 @@ class Brief
     }
 
     /**
-     * Gets a value if the key exists, returns bool `false` otherwise.
+     * Gets a value if the key exists, returns `null` otherwise.
      *
      * @param string $name
      *
@@ -282,7 +275,7 @@ class Brief
     {
         return isset($this->arguments[$name])
             ? $this->getValue($this->arguments[$name])
-            : false;
+            : null;
     }
 
     /**
@@ -308,7 +301,7 @@ class Brief
     {
         return isset($item['value'])
             ? $item['value']
-            : false;
+            : null;
     }
 
     protected function getArgumentsSortedByOrder()
@@ -443,12 +436,12 @@ class Brief
 
         // ...Otherwise, it has to be an array
         if ( ! is_array($keys)) {
-            return false;
+            return null;
         }
 
         // Prevent infinite recursion
         if (empty($keys)) {
-            return false;
+            return null;
         }
 
         $get = array_shift($keys);
