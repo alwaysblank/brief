@@ -1,4 +1,4 @@
-= Brief 📂📂📂
+= Brief 📂
 :Date: 12/15/2019
 :Revision: 2.0.0-alpha
 :Author: Ben Martinez-Bateman
@@ -49,7 +49,7 @@ $Brief = Brief::make([
 $Brief->key;
 // 'value'
 
-$Breif->doesnt_exist;
+$Brief->doesnt_exist;
 // null
 ----
 
