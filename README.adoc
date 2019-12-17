@@ -89,6 +89,23 @@ $brief = new Brief(
 In this example, whenever Brief encounters errors that it has some understanding of, an error message will be passed to the callable you've defined here.
 If instead of a callable you pass boolean `true` to the `logger` setting, then it will just dispatch an canned message to PHP's `error_log()` and your system will handle that however it's configured to.
 
+If, for some reason, you need to manually log something to a Brief, you can do so:
+
+[source,php]
+----
+$brief = new Brief(
+    ['key' => 'value'],
+    ['logger' => function($name, $description, $clone, $data) {
+        // Do something with this data
+    }]
+);
+
+$brief->log('ExampleError', 'This is to prove a point', ['a_key' => 'some_value']);
+----
+
+It will be sent to whatever logger you have defined (or, if you haven't defined one, nothing will happen).
+This is exactly the same mechanism Brief uses to log errors internally.
+
 [WARNING]
 ====
 This method is only fired on problems Brief is equipped to understand and expect;
