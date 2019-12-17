@@ -527,6 +527,15 @@ class Brief
         }
     }
 
+    public function hasLogger()
+    {
+        if (isset($this->callables['logger'])) {
+            return true === $this->callables['logger'] || is_callable($this->callables['logger']);
+        }
+
+        return false;
+    }
+
     /**
      * Log an error to the defined logger, if any.
      *
@@ -536,7 +545,7 @@ class Brief
      */
     public function log(string $name, string $description = null, array $data = [])
     {
-        if ( ! isset($this->callables['logger'])) {
+        if ( ! $this->hasLogger()) {
             return;
         }
 
