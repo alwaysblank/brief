@@ -65,3 +65,38 @@ $Brief = new Brief([
 ]);
 ----
 ====
+
+=== Logging
+
+Since the basic concept for Brief is about how either your data exists or doesn't, Brief will not complain loudly if you do something it doesn't like.
+If it's recoverable, it will simply recover and move on, with your data likely lost.
+In most cases, this should be fine; Your logic will have something to do if Brief gives you `null` for a piece of data you thought you'd added.
+
+In some situations, though, you don't want this--you want to know what's happened.
+Fortunately, Brief includes a very simple logging feature.
+To use it, just do the following:
+
+[source,php]
+----
+$brief = new Brief(
+    ['key' => 'value'],
+    ['logger' => function($name, $description, $clone, $data) {
+        // Do something with this data
+    }]
+);
+----
+
+In this example, whenever Brief encounters errors that it has some understanding of, an error message will be passed to the callable you've defined here.
+If instead of a callable you pass boolean `true` to the `logger` setting, then it will just dispatch an canned message to PHP's `error_log()` and your system will handle that however it's configured to.
+
+[WARNING]
+====
+This method is only fired on problems Brief is equipped to understand and expect;
+it will not, for instance, catch an exception you throw during `transform()`.
+====
+
+[NOTE]
+====
+If you used v1 of Brief, then these logger calls happen in the same places where Brief used to throw Exceptions, and replace that functionality;
+Brief will not longer throw Exceptions of its own volition.
+====

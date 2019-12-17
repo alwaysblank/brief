@@ -1,8 +1,5 @@
 <?php namespace AlwaysBlank\Brief;
 
-use AlwaysBlank\Brief\Exceptions\CannotSetProtectedKeyException;
-use AlwaysBlank\Brief\Exceptions\WrongArgumentTypeException;
-
 class Brief
 {
     private $arguments = [];
@@ -12,7 +9,7 @@ class Brief
      *
      * @var array|object
      */
-    static $protected = ['protected', 'arguments', 'aliases'];
+    static $protected = ['protected', 'arguments', 'aliases', 'logger'];
 
     /**
      * An array of aliases for internal terms. The key is the alias; the value is the internal key.
@@ -22,12 +19,27 @@ class Brief
     protected $aliases = [];
 
     /**
+     * If set, this provides a callable that can be used to log errors.
+     * When called, it will receive the following arguments:
+     *   - Event name
+     *   - Event description
+     *   - Clone of calling Brief at time of error
+     *   - Array of any relevant data
+     *
+     * If set to `true`, then logs will simply be passed to `error_log()` and
+     * therefore handled by the system's logging mechanisms.
+     *
+     * By default the value is null, and nothing will be logged.
+     *
+     * @var callable
+     */
+    private $callables = [];
+
+    /**
      * Brief constructor.
      *
      * @param array $items
      * @param array $settings
-     *
-     * @throws WrongArgumentTypeException
      */
     public function __construct($items = [], array $settings = [])
     {
@@ -53,9 +65,8 @@ class Brief
      * @param $items
      *
      * @return object|array|Brief
-     * @throws WrongArgumentTypeException
      */
-    protected static function normalizeInput($items)
+    protected function normalizeInput($items)
     {
         if (is_a($items, self::class)) {
             return $items;
@@ -70,7 +81,9 @@ class Brief
         }
 
         if ( ! is_array($items)) {
-            throw new WrongArgumentTypeException("Did not pass array or iterable object.");
+            $this->log("WrongArgumentType", "Did not pass array or iterable object.", ['items' => $items]);
+
+            return [];
         }
 
         return $items;
@@ -90,18 +103,14 @@ class Brief
      * @param array                 $settings
      *
      * @return Brief
-     * @throws WrongArgumentTypeException
      */
     public static function make($items, array $settings = []): Brief
     {
-        $normalized = self::normalizeInput($items);
-        if (empty($normalized)) {
-            return new self([], $settings);
-        } elseif (is_a($normalized, self::class)) {
-            return $normalized;
+        if (is_a($items, self::class)) {
+            return $items;
         }
 
-        return new self($normalized, $settings);
+        return new self($items, $settings);
     }
 
     public function parseSettings(array $settings)
@@ -115,6 +124,9 @@ class Brief
                 case 'aliases':
                 case 'alias':
                     $this->parseAliasSetting($arg);
+                    break;
+                case 'logger':
+                    $this->setUpLogger($arg);
                     break;
             }
         }
@@ -180,9 +192,10 @@ class Brief
     protected function storeSingle($value, string $key = null, int $order = null): self
     {
         if (false === $this::isKeyAllowed($key)) {
-            throw new CannotSetProtectedKeyException(
-                sprintf("The key `%s` is prohibited.", $key)
-            );
+            $this->log('ProtectedKey', 'This key is protected and cannot be used.',
+                ['key' => $key, 'protected_keys' => self::$protected]);
+
+            return $this;
         }
 
         if (isset($this->aliases[$key])) {
@@ -197,6 +210,17 @@ class Brief
         return $this;
     }
 
+    /**
+     * Store multiple values, as defined by an array.
+     *
+     * Optionally, you can define the number from which Brief will start
+     * ordering the items.
+     *
+     * @param array $values
+     * @param int   $order_start
+     *
+     * @return $this
+     */
     protected function store(array $values, int $order_start = 0)
     {
         $i = $order_start;
@@ -257,11 +281,7 @@ class Brief
      */
     public function __set(string $name, $value)
     {
-        try {
-            $this->storeSingle($value, $this->getAuthoritativeName($name) ?? $name, $this->getIncrementedOrder());
-        } catch (CannotSetProtectedKeyException $e) {
-            echo "Could not set this value: " . $e->getMessage();
-        }
+        $this->storeSingle($value, $this->getAuthoritativeName($name) ?? $name, $this->getIncrementedOrder());
     }
 
     /**
@@ -465,9 +485,10 @@ class Brief
      */
     public function transform(callable $callable)
     {
-        foreach($this->getKeyed() as $key => $value) {
+        foreach ($this->getKeyed() as $key => $value) {
             $callable($value, $key, $this);
         }
+
         return $this;
     }
 
@@ -484,11 +505,47 @@ class Brief
      * @param callable $callable
      *
      * @return Brief
-     * @throws WrongArgumentTypeException
      */
     public function map(callable $callable)
     {
         $New = clone $this;
+
         return $New->transform($callable);
+    }
+
+    /**
+     * Attach logger to Brief, if valid.
+     *
+     * @param $callable
+     */
+    protected function setUpLogger($callable)
+    {
+        if (is_callable($callable)) {
+            $this->callables['logger'] = $callable;
+        } elseif (true === $callable) {
+            $this->callables['logger'] = true; // Use system `error_log()`
+        }
+    }
+
+    /**
+     * Log an error to the defined logger, if any.
+     *
+     * @param string      $name
+     * @param string|null $description
+     * @param array       $data
+     */
+    public function log(string $name, string $description = null, array $data = [])
+    {
+        if ( ! isset($this->callables['logger'])) {
+            return;
+        }
+
+        if (is_callable($this->callables['logger'])) {
+            $clone = clone $this;
+            call_user_func($this->callables['logger'], $name, $description, $clone, $data);
+        } elseif (true === $this->callables['logger']) {
+            $message = join(' :: ', array_filter([$name, $description, var_export($data, true)]));
+            error_log($message, 0);
+        }
     }
 }

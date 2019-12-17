@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-use AlwaysBlank\Brief\Brief;
+namespace AlwaysBlank\Brief;
+
 use AlwaysBlank\Brief\Exceptions\CannotSetProtectedKeyException;
-use AlwaysBlank\Brief\Exceptions\WrongArgumentTypeException;
+use mysql_xdevapi\Exception;
 use PHPUnit\Framework\TestCase;
 
 final class BriefTest extends TestCase
@@ -36,23 +37,49 @@ final class BriefTest extends TestCase
 
     public function testAttemptingToUseProtectedKeysThrowsCorrectException(): void
     {
-        $this->expectException(CannotSetProtectedKeyException::class);
-        Brief::make(['protected' => 'value']);
+        $this->expectOutputRegex('/ERR: ProtectedKey :: This key is protected and cannot be used. ::.*/ms');
+        Brief::make(['protected' => 'value'], ['logger' => true]);
     }
 
     public function testAttemptingToUseProtectedKeyToDynamicallySetValueThrowsCorrectException(): void
     {
 
-        $this->expectOutputString("Could not set this value: The key `protected` is prohibited.");
-        Brief::make([])->protected = 'value';
+        $this->expectOutputRegex('/ERR: ProtectedKey :: This key is protected and cannot be used. ::.*/ms');
+        Brief::make([], ['logger' => true])->protected = 'value';
     }
 
-    public function testAttemptingToPassNonViableInputThrowsCorrectException(): void
+    public function testAttemptingToPassNonViableInputLogsCorrectData(): void
     {
-        $this->expectException(WrongArgumentTypeException::class);
-        Brief::make(1);
-        Brief::make('test');
-        Brief::make((object)[]);
+        $this->expectOutputRegex('/ERR: WrongArgumentType :: Did not pass array or iterable object. ::.*/ms');
+        Brief::make(1, ['logger' => true]);
+        $this->expectOutputRegex('/ERR: WrongArgumentType :: Did not pass array or iterable object. ::.*/ms');
+        Brief::make('test', ['logger' => true]);
+        $this->expectOutputRegex('/ERR: WrongArgumentType :: Did not pass array or iterable object. ::.*/ms');
+        Brief::make((object)[], ['logger' => true]);
+    }
+
+    public function testPassingBooleanTrueAsLoggerResultsInUseOfSystemErrorLog(): void
+    {
+        $this->expectOutputRegex('/ERR: WrongArgumentType :: Did not pass array or iterable object. ::.*/ms');
+        Brief::make(1, ['logger' => true]);
+    }
+
+    public function testPassingCallableToLoggerCallsThatFunction(): void
+    {
+        $this->expectException(\Exception::class);
+        Brief::make(1, ['logger' => function() {
+            throw new \Exception('TestException');
+        }]);
+        $this->expectOutputRegex('/oh shit.*/ms');
+        Brief::make(1, ['logger' => function() {
+            echo 'oh shit';
+        }]);
+    }
+
+    public function testReturnsNullIfAttemptToLogWithNoCallable(): void
+    {
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
+        $this->assertNull(Brief::make([])->log('test', 'a test problem'));
     }
 
     public function testAttempingToPassBooleanAsInputCreatesEmptyBrief(): void
@@ -90,7 +117,7 @@ final class BriefTest extends TestCase
         $Brief = Brief::make(['test' => $original]);
         $this->assertEquals(
             $result,
-            $Brief->debrief('makeUppercase')
+            $Brief->debrief(__NAMESPACE__ . '\\makeUppercase')
         );
     }
 
@@ -108,7 +135,7 @@ final class BriefTest extends TestCase
         $Brief = Brief::make([$one, $two]);
         $this->assertEquals(
             $result,
-            $Brief->pass('makeConcatenated')
+            $Brief->pass(__NAMESPACE__ . '\\makeConcatenated')
         );
     }
 
@@ -351,13 +378,13 @@ final class BriefTest extends TestCase
 
     public function testConvertItemsInBriefWithTransform(): void
     {
-        $Brief  = Brief::make([
+        $Brief = Brief::make([
             'key1' => ['nested1' => 'value1'],
             'key2' => ['nested2' => 'value2'],
         ]);
 
-        $Returned = $Brief->transform(function($value, $key, $instance) {
-           $instance->$key = Brief::make($value);
+        $Returned = $Brief->transform(function ($value, $key, $instance) {
+            $instance->$key = Brief::make($value);
         });
 
         $this->assertInstanceOf(Brief::class, $Brief->key1);
@@ -369,12 +396,12 @@ final class BriefTest extends TestCase
 
     public function testConvertItemsIntoNewBriefWithMap(): void
     {
-        $Brief  = Brief::make([
+        $Brief = Brief::make([
             'key1' => ['nested1' => 'value1'],
             'key2' => ['nested2' => 'value2'],
         ]);
 
-        $Returned = $Brief->map(function($value, $key, $instance) {
+        $Returned = $Brief->map(function ($value, $key, $instance) {
             $instance->$key = Brief::make($value);
         });
 
@@ -385,4 +412,17 @@ final class BriefTest extends TestCase
         $this->assertNotEquals($Returned, $Brief);
 
     }
+}
+
+/**
+ * Fake the system call to error_log() so we can test it.
+ *
+ * @param $msg
+ * @param $code
+ */
+function error_log($msg, $code)
+{
+    // this will be called from abc\Logger::error
+    // instead of the native error_log() function
+    echo "ERR: $msg";
 }
