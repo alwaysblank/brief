@@ -38,10 +38,10 @@ class Brief
     /**
      * Brief constructor.
      *
-     * @param array|Brief $items
-     * @param array       $settings
+     * @param iterable|object|Brief $items
+     * @param array                 $settings
      */
-    public function __construct($items = [], array $settings = [])
+    public function __construct($items = null, array $settings = [])
     {
         if (is_a($items, self::class)) {
             $this->import($items, $settings);
@@ -52,7 +52,7 @@ class Brief
     }
 
     /**
-     * Creates an empty Brief, CANNOT throw WrongArgumentException.
+     * Creates an empty Brief.
      *
      * @param array $settings
      *
@@ -104,7 +104,7 @@ class Brief
      *
      * @return Brief
      */
-    public static function make($items, array $settings = []): Brief
+    public static function make($items = null, array $settings = []): Brief
     {
         if (is_a($items, self::class)) {
             return $items;
