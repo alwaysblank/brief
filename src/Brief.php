@@ -38,13 +38,17 @@ class Brief
     /**
      * Brief constructor.
      *
-     * @param array $items
-     * @param array $settings
+     * @param array|Brief $items
+     * @param array       $settings
      */
     public function __construct($items = [], array $settings = [])
     {
-        $this->parseSettings($settings);
-        $this->store(self::normalizeInput($items));
+        if (is_a($items, self::class)) {
+            $this->import($items, $settings);
+        } else {
+            $this->parseSettings($settings);
+            $this->store($this->normalizeInput($items));
+        }
     }
 
     /**
@@ -68,10 +72,6 @@ class Brief
      */
     protected function normalizeInput($items)
     {
-        if (is_a($items, self::class)) {
-            return $items;
-        }
-
         if (is_object($items) && count(get_object_vars($items)) > 0) {
             return get_object_vars($items);
         }
@@ -555,6 +555,49 @@ class Brief
         } elseif (true === $this->callables['logger']) {
             $message = join(' :: ', array_filter([$name, $description, var_export($data, true)]));
             error_log($message, 0);
+        }
+    }
+
+    /**
+     * This returns the unmodified internal settings properties.
+     *
+     * This should rarely be used: It is mostly useful for making a copy of an
+     * existing brief.
+     *
+     * @return array
+     */
+    public function export()
+    {
+        return [
+            'arguments' => $this->arguments,
+            'aliases'   => $this->aliases,
+            'callables' => $this->callables,
+        ];
+    }
+
+    /**
+     * This imports the content of an existing Brief into this one.
+     *
+     * This is notably distinct from the behavior of passing a Brief to the
+     * `make()` factory method, because that will return the *same* Brief it
+     * was given, while this method will attempt to graft the content of the
+     * Brief it receives onto a *new* Brief.
+     *
+     * @param Brief $items
+     * @param       $settings
+     */
+    protected function import(Brief $items, $settings)
+    {
+        [
+            'arguments' => $arguments,
+            'aliases'   => $aliases,
+            'callables' => $callables
+        ] = $items->export();
+        $this->arguments = $arguments;
+        $this->aliases   = $aliases;
+        $this->callables = $callables;
+        if (is_array($settings) && count($settings) > 0) {
+            $this->parseSettings($settings);
         }
     }
 }

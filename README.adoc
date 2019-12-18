@@ -66,6 +66,22 @@ $Brief = new Brief([
 ----
 ====
 
+=== Arguments
+
+A new Brief, whether created with `new Brief()` or `Brief::make()` takes two arguments:
+
+`$items`:: The values to be stored, usually as an array.
+`$settings`:: Some settings for things like callables, aliases, etc.
+
+These arguments are treated the same whichever method of instantiation you use, with one major difference.
+While `$items` will an existing Brief through either method, the behavior will be different:
+
+`Brief::make($Brief)`:: This will return *the exact same Brief* that you passed to it.
+`new Brief($Brief)`:: This will attempt to ingest all of the data and setting stored on the passed Brief and apply them to *a new instance of Brief*.
+
+In many situations the distinction will be academic--you can still get at your data whichever one you use--but the distinction should be kept in mind, especially if you feel you might be using strict comparison on Briefs.
+My recommendation is to simply pick an instantiation method and use that for an entire project, to minimize possible confusion.
+
 === Logging
 
 Since the basic concept for Brief is about how either your data exists or doesn't, Brief will not complain loudly if you do something it doesn't like.

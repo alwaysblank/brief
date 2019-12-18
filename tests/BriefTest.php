@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace AlwaysBlank\Brief;
 
-use AlwaysBlank\Brief\Exceptions\CannotSetProtectedKeyException;
-use mysql_xdevapi\Exception;
 use PHPUnit\Framework\TestCase;
 
 final class BriefTest extends TestCase
@@ -17,13 +15,35 @@ final class BriefTest extends TestCase
         );
     }
 
-    public function testReturnsSameBriefIfGivenBriefAsArgument(): void
+    public function testMakeReturnsSameBriefIfGivenBriefAsArgument(): void
     {
         $Tester = Brief::make(['key' => 'value']);
-        $this->assertEquals(
+        $this->assertSame(
             $Tester,
             Brief::make($Tester)
         );
+    }
+
+    public function testNewReturnsNewBriefWithValuesOfOldBrief(): void
+    {
+        $Tester = Brief::make(['key' => 'value'], [
+            'aliases' => ['key' => 'uno'],
+        ]);
+        $New    = (new Brief($Tester, [
+            'aliases' => ['key' => 'eins'],
+        ]));
+        $this->assertEquals(
+            'value',
+            $New->key
+        );
+        $this->assertNotSame(
+            $Tester,
+            $New
+        );
+        $this->assertEquals('key', $Tester->getAliasedKey('uno'));
+        $this->assertEquals('key', $New->getAliasedKey('eins'));
+        $this->assertEquals('value', $New->eins);
+        $this->assertEquals('value', $New->uno);
     }
 
     public function testCanAcceptObjectAsArgument(): void
@@ -67,13 +87,17 @@ final class BriefTest extends TestCase
     public function testPassingCallableToLoggerCallsThatFunction(): void
     {
         $this->expectException(\Exception::class);
-        Brief::make(1, ['logger' => function() {
-            throw new \Exception('TestException');
-        }]);
+        Brief::make(1, [
+            'logger' => function () {
+                throw new \Exception('TestException');
+            }
+        ]);
         $this->expectOutputRegex('/oh shit.*/ms');
-        Brief::make(1, ['logger' => function() {
-            echo 'oh shit';
-        }]);
+        Brief::make(1, [
+            'logger' => function () {
+                echo 'oh shit';
+            }
+        ]);
     }
 
     public function testReturnsNullIfAttemptToLogWithNoCallable(): void
