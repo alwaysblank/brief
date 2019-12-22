@@ -224,7 +224,25 @@ class Brief
      */
     public function getAliasedKey(string $alias)
     {
-        return $this->collapseAliasChain($alias);
+        // Check alias for allowable keys
+        if (false === $this::isKeyAllowed($alias)) {
+            $this->log('ProtectedKey', 'This key is protected and cannot be used.',
+                ['key' => $alias, 'protected_keys' => self::$protected]);
+
+            return false;
+        }
+
+        $authoritative = $this->collapseAliasChain($alias);
+
+        // Check resolved value for allowable keys
+        if (false === $this::isKeyAllowed($authoritative)) {
+            $this->log('ProtectedKey', 'This key is protected and cannot be used.',
+                ['key' => $authoritative, 'protected_keys' => self::$protected]);
+
+            return false;
+        }
+
+        return $authoritative;
     }
 
     /**
@@ -240,15 +258,15 @@ class Brief
      */
     protected function storeSingle($value, string $key = null, int $order = null): self
     {
+        if (isset($this->aliases[$key])) {
+            $key = $this->getAuthoritativeName($key) ?? $key;
+        }
+
         if (false === $this::isKeyAllowed($key)) {
             $this->log('ProtectedKey', 'This key is protected and cannot be used.',
                 ['key' => $key, 'protected_keys' => self::$protected]);
 
             return $this;
-        }
-
-        if (isset($this->aliases[$key])) {
-            $key = $this->getAuthoritativeName($key) ?? $key;
         }
 
         $this->store[$key] = [
@@ -281,7 +299,6 @@ class Brief
         return $this;
     }
 
-
     /**
      * Checks an individual key to see if it is allowed.
      *
@@ -294,6 +311,38 @@ class Brief
         return ! in_array($key, self::$protected);
     }
 
+    protected function getIntFromUnderscoreProp($key)
+    {
+        if (0 === strpos($key, '_') && is_numeric(substr($key, 1))) {
+            return intval(substr($key, 1));
+        }
+
+        return null;
+    }
+    /**
+     * TODO: Make a `maybeSetByOrder` that allows us to try and set an ordered
+     * item by numeric key using an underscore prop. Should first text to see if
+     * there is an existing prop using the underscore string.
+     */
+
+    protected function maybeGetByOrder($key)
+    {
+        /**
+         * Integers are not allowed as object properties, so here we make a
+         * a way to easily access ordered data; by prefixing the order number
+         * with an underscore, i.e. `$brief->_1`.
+         */
+        $order = $this->getIntFromUnderscoreProp($key);
+        if (null !== $order) {
+            $value = $this->getByOrder($order);
+            if (null !== $value) {
+                return $value;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * True if key has been set; false otherwise.
      *
@@ -303,7 +352,7 @@ class Brief
      */
     public function __isset($name)
     {
-        return in_array($name, array_keys($this->store));
+        return $this->__get($name) ?? false;
     }
 
     /**
@@ -315,7 +364,7 @@ class Brief
      */
     public function __get($name)
     {
-        return $this->getArgument($this->getAuthoritativeName($name));
+        return $this->maybeGetByOrder($name) ?: $this->get($name);
     }
 
     /**
@@ -330,7 +379,7 @@ class Brief
      */
     public function __set(string $name, $value)
     {
-        $this->storeSingle($value, $this->getAuthoritativeName($name) ?? $name, $this->getIncrementedOrder());
+        $this->set($name, $value);
     }
 
     /**
@@ -340,11 +389,55 @@ class Brief
      *
      * @return mixed
      */
-    protected function getArgument($name)
+    protected function getByKey($name)
     {
         return isset($this->store[$name])
             ? $this->getValue($this->store[$name])
             : null;
+    }
+
+    /**
+     * Get a value from the Brief.
+     * 
+     * If $key is an integer, it will get the data base on order, on
+     * the assumption that this is a numeric array. If $key is a string,
+     * they it will get the data based on the key.
+     *
+     * @param string|int $key
+     * @return mixed|null
+     */
+    public function get($key)
+    {
+        if (is_int($key)) {
+            return $this->getByOrder($key);
+        } elseif (is_string($key)) {
+            return $this->getByKey($this->getAuthoritativeName($key));
+        }
+
+        return null;
+    }
+
+    /**
+     * Store a value.
+     * 
+     * If $key is an integer, then the value will be stored with that as
+     * the order and the key name. If $key is a string, then the value will
+     * be stored under that key, and its order will be the next in order.
+     *
+     * @param string|int $key
+     * @param mixed $value
+     */
+    public function set($key, $value)
+    {
+        if (is_int($key)) {
+            $this->storeSingle($value, (string)$key, $key);
+        } elseif (is_string($key)) {
+            $this->storeSingle(
+                $value, 
+                $this->getAuthoritativeName($key), 
+                $this->getIncrementedOrder()
+            );
+        }
     }
 
     /**
@@ -483,6 +576,18 @@ class Brief
     }
 
     /**
+     * Get a value based on its order.
+     *
+     * @param integer $int
+     * @return mixed
+     */
+    public function getByOrder(int $int)
+    {
+        $ordered = $this->getOrdered();
+        return $ordered[$int] ?? null;
+    }
+
+    /**
      * Get all data in this Brief as a keyed array.
      *
      * @return array
@@ -557,7 +662,7 @@ class Brief
     {
         // Be friendly
         if (is_string($keys)) {
-            return $this->getArgument($keys);
+            return $this->getByKey($keys);
         }
 
         // ...Otherwise, it has to be an array
@@ -572,7 +677,7 @@ class Brief
 
         $get = array_shift($keys);
 
-        return $this->getArgument($get) ?: $this->find($keys);
+        return $this->getByKey($get) ?: $this->find($keys);
     }
 
     /**

@@ -86,6 +86,27 @@ My recommendation is to simply pick an instantiation method and use that for an 
 
 == Features
 
+=== Storing Data
+
+This is the primary feature of Brief.
+
+Brief expects data in an array, but whether that array is keyed or numeric is up to you. 
+(Or, use a language where arrays aren't as confusing.)
+
+[source,php]
+----
+$keyed = Brief::make([
+    'key' => 'value1',
+    'key2' => 'value2',
+]);
+
+$numeric = Brief::make([
+    'number1',
+    'number2',
+]);
+----
+
+
 === Aliasing
 
 You may find yourself in a situation where you want to have multiple keys that point to the same data.

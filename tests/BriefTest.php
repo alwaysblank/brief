@@ -65,7 +65,9 @@ final class BriefTest extends TestCase
     {
 
         $this->expectOutputRegex('/ERR: ProtectedKey :: This key is protected and cannot be used. ::.*/ms');
-        Brief::make([], ['logger' => true])->protected = 'value';
+        $Brief = Brief::make([], ['logger' => true]);
+        $Brief->protected = 'value';
+        var_dump($Brief);
     }
 
     public function testAttemptingToPassNonViableInputLogsCorrectData(): void
