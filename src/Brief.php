@@ -2,6 +2,11 @@
 
 class Brief
 {
+    /**
+     * Contains all data that the Brief stores.
+     *
+     * @var array
+     */
     private $arguments = [];
 
     /**
@@ -12,26 +17,25 @@ class Brief
     static $protected = ['protected', 'arguments', 'aliases', 'logger'];
 
     /**
-     * An array of aliases for internal terms. The key is the alias; the value is the internal key.
+     * An array of aliases for internal terms. The key is the alias; the value 
+     * is the internal key.
      *
      * @var array
      */
     protected $aliases = [];
 
     /**
-     * If set, this provides a callable that can be used to log errors.
-     * When called, it will receive the following arguments:
-     *   - Event name
-     *   - Event description
-     *   - Clone of calling Brief at time of error
-     *   - Array of any relevant data
+     * This collects callables that the Brief needs, or might want,
+     * access to internally. These are generally for internal functions,
+     * *not* for things like `pass()` or `debrief()`.
+     * 
+     * The key is the name by which the callable will be retrieved;
+     * the value is the callable itself.
+     * 
+     * Supports the following:
+     *  - 'logger' -- For (optionally) logging internal errors.
      *
-     * If set to `true`, then logs will simply be passed to `error_log()` and
-     * therefore handled by the system's logging mechanisms.
-     *
-     * By default the value is null, and nothing will be logged.
-     *
-     * @var callable
+     * @var callables
      */
     private $callables = [];
 
@@ -113,6 +117,15 @@ class Brief
         return new self($items, $settings);
     }
 
+    /**
+     * Parse settings into the Brief.
+     * 
+     * This expects an array with particular keys; only keys that correspond to
+     * expected settings will be parsed. Effectively this is whitelisting 
+     * appropriate keys.
+     * 
+     * @param array $settings
+     */
     public function parseSettings(array $settings)
     {
         if (empty($settings)) {
@@ -132,24 +145,39 @@ class Brief
         }
     }
 
+    /**
+     * Parse any aliases described in settings.
+     *
+     * @param array $aliases
+     */
     public function parseAliasSetting($aliases)
     {
-        if (empty($aliases) || ! is_array($aliases)) {
-            return;
-        }
-        $compiled = [];
-        foreach ($aliases as $key => $terms) {
-            if (is_string($terms)) {
-                $terms = [$terms];
+        if (!empty($aliases) && is_array($aliases)) {
+            $compiled = [];
+            foreach ($aliases as $key => $terms) {
+                if (is_string($terms)) {
+                    $terms = [$terms];
+                }
+                if ( ! is_array($terms)) {
+                    continue;
+                }
+                $compiled = array_merge($compiled, array_fill_keys(array_values($terms), $key));
             }
-            if ( ! is_array($terms)) {
-                continue;
-            }
-            $compiled = array_merge($compiled, array_fill_keys(array_values($terms), $key));
+            $this->aliases = array_merge($this->aliases, $compiled);
         }
-        $this->aliases = array_merge($this->aliases, $compiled);
     }
 
+    /**
+     * Attempt to collapse an alias chain and determine the authoritative key.
+     * 
+     * A result of "false" means that this method has encountered an infitite loop,
+     * or is otherwise unable to determine if an alias chain leads anywhere.
+     * If you recieve a "false," assume that there is no corresponding key.
+     *
+     * @param string $alias
+     * @param array $chain
+     * @return string|boolean
+     */
     protected function collapseAliasChain(string $alias, $chain = [])
     {
         if (count($chain) > count($this->aliases)) {
@@ -184,11 +212,32 @@ class Brief
         return $this->collapseAliasChain($this->aliases[$alias], $chain);
     }
 
+    /**
+     * Provide a public method to get authoritative keys.
+     * 
+     * Keep in mind this returns *only the key*. In most cases you
+     * will actually want the associated value, and should just get
+     * that value by accessing a property normally.
+     *
+     * @param string $alias
+     * @return string|boolean
+     */
     public function getAliasedKey(string $alias)
     {
         return $this->collapseAliasChain($alias);
     }
 
+    /**
+     * Store a single value on the Brief.
+     * 
+     * If you attempt to use a protected key (see self::$protected), the
+     * data will not be stored. If logging is enabled, an error will be logged.
+     *
+     * @param mixed $value
+     * @param string $key
+     * @param integer $order
+     * @return self
+     */
     protected function storeSingle($value, string $key = null, int $order = null): self
     {
         if (false === $this::isKeyAllowed($key)) {
@@ -260,7 +309,6 @@ class Brief
     /**
      * Get the value of a key if it is set; return null otherwise.
      *
-     *
      * @param string $name
      *
      * @return mixed
@@ -273,8 +321,9 @@ class Brief
     /**
      * Allows you to set a value dynamically: `$Brief->newValue = 'something';`.
      *
-     * This respects aliases, so if you set something making it impossible to create a new key with the name of an
-     * alias you have for another key.
+     * This respects aliases; data passed to an alias will be stored under the
+     * authoritative key for that alias. This means that you cannot create a "new"
+     * key that has the name of an alias.
      *
      * @param string $name
      * @param        $value
@@ -285,7 +334,7 @@ class Brief
     }
 
     /**
-     * Gets a value if the key exists, returns `null` otherwise.
+     * Gets a value if the key exists, returns null otherwise.
      *
      * @param string $name
      *
@@ -299,10 +348,12 @@ class Brief
     }
 
     /**
-     * This will get the authoritative name (either the key, or the key that the passed alias points to).
+     * This will get the authoritative name (either the key, or the key that 
+     * the passed alias points to).
      *
-     * This returns null, *not* bool false, so that it will always cause `isset()` to return bool false when used
-     * against an array (since an array row can't have a key of `null`).
+     * This returns null, *not* bool false, so that it will always cause 
+     * `isset()` to return bool false when used against an array (since an 
+     * array row can't have a key of `null`).
      *
      * @param $name
      *
@@ -317,6 +368,14 @@ class Brief
         return $this->getAliasedKey($name) ?: null;
     }
 
+    /**
+     * Get the value of an internal storage element.
+     * 
+     * Returns null if the item has no value.
+     *
+     * @param array $item
+     * @return mixed|null
+     */
     protected function getValue($item)
     {
         return isset($item['value'])
@@ -324,6 +383,11 @@ class Brief
             : null;
     }
 
+    /**
+     * Get all data stored on the Brief, in the correct order.
+     *
+     * @return array
+     */
     protected function getArgumentsSortedByOrder()
     {
         $rekeyed = array_column($this->arguments, null, 'order');
@@ -332,7 +396,17 @@ class Brief
         return $rekeyed;
     }
 
-    protected function getOrderLimit(string $which = 'start', string $returnOnly = null)
+    /**
+     * Find the data at the beginning or end of the internal order.
+     * 
+     * The second parameters allows you to specify what internal data attribute
+     * you want (i.e. 'value', 'order').
+     *
+     * @param string $which
+     * @param string $attribute
+     * @return void
+     */
+    protected function getOrderLimit(string $which = 'start', string $attribute = null)
     {
         $ordered = $this->getArgumentsSortedByOrder();
         if ('start' === $which) {
@@ -341,40 +415,71 @@ class Brief
             $limit = end($ordered);
         }
 
-        if (null !== $returnOnly && isset($limit[$returnOnly])) {
-            return $limit[$returnOnly];
+        if (null !== $attribute && isset($limit[$attribute])) {
+            return $limit[$attribute];
         }
 
         return $limit;
     }
 
+    /**
+     * Return the largest number in the internal order.
+     *
+     * @return integer
+     */
     protected function getHighestOrder()
     {
         return $this->getOrderLimit('end', 'order');
     }
 
+    /**
+     * Return the lowest number in the internal order.
+     *
+     * @return integer
+     */
     protected function getLowestOrder()
     {
         return $this->getOrderLimit('start', 'order');
     }
 
+    /**
+     * Get the next number in the order.
+     *
+     * @return integer
+     */
     protected function getIncrementedOrder(): int
     {
         return $this->getHighestOrder() + 1;
     }
 
-    protected function getFilledOrdered($return = null)
+    /**
+     * Fill in any missing numeric keys when ordered by number.
+     * 
+     * Second argument is the value that missing keys will be filled with.
+     *
+     * @param mixed $return
+     * @return array
+     */
+    protected function getFilledOrdered($fill = null)
     {
         $orders = $this->getArgumentsSortedByOrder();
 
-        return array_map(function ($key) use ($orders, $return) {
-            return $orders[$key] ?? ['order' => $key, 'value' => $return];
+        return array_map(function ($key) use ($orders, $fill) {
+            return $orders[$key] ?? ['order' => $key, 'value' => $fill];
         }, range($this->getLowestOrder(), $this->getHighestOrder()));
     }
 
-    public function getOrdered($return = null)
+    /**
+     * Get all data on the Brief, in order, with missing keys filled.
+     * 
+     * Second argument is the value that missing keys will be filled with.
+     *
+     * @param mixed $return
+     * @return array
+     */
+    public function getOrdered($fill = null)
     {
-        return array_column($this->getFilledOrdered($return), 'value', 'order');
+        return array_column($this->getFilledOrdered($fill), 'value', 'order');
     }
 
     /**
@@ -392,8 +497,8 @@ class Brief
     /**
      * Pass an unmodified Brief to an callable.
      *
-     * If the callable does not understand Briefs or how to get arguments from objects,
-     * you should probably use `pass()` instead.
+     * If the callable does not understand Briefs or how to get arguments from 
+     * objects, you should probably use `pass()` instead.
      *
      * @param callable $callable
      *
@@ -407,8 +512,8 @@ class Brief
     /**
      * Pass the contents of a Brief as a series of arguments to callable.
      *
-     * This method allows for Brief to easily interact with methods that do not know how to handle it
-     * specifically.
+     * This method allows for Brief to easily interact with methods that do not 
+     * know how to handle it specifically.
      *
      * @param callable $callable
      *
@@ -419,11 +524,12 @@ class Brief
         return call_user_func_array($callable, $this->getOrdered());
     }
 
-    /**__
-     * Very similar to Brief::pass(), but passes an array instead of a series of arguments.
+    /**
+     * Very similar to Brief::pass(), but passes an array instead of a series 
+     * of arguments.
      *
-     * Passes a keyed array by default, but passing `false` to the second argument will pass
-     * an ordered numeric array instead.
+     * Passes a keyed array by default, but passing `false` to the second 
+     * argument will pass an ordered numeric array instead.
      *
      * @param callable $callable
      *
@@ -476,8 +582,8 @@ class Brief
      * arguments may produce strange results.
      *
      * This acts directly on the Brief on which it is called, and returns that
-     * Brief. Be careful; this means that your original Brief is changed. If you
-     * want a copy of your Brief, use map().
+     * Brief. Be careful; this means that your original Brief is changed. If 
+     * you want a *copy* of your Brief, use map().
      *
      * @param callable $callable
      *
@@ -515,6 +621,16 @@ class Brief
 
     /**
      * Attach logger to Brief, if valid.
+     * 
+     * The only argument here is a callable.
+     * When called, it will receive the following arguments:
+     *   - Event name
+     *   - Event description
+     *   - Clone of calling Brief at time of error
+     *   - Array of any relevant data
+     *
+     * If set to `true`, then logs will simply be passed to `error_log()` and
+     * therefore handled by the system's logging mechanisms.
      *
      * @param $callable
      */
@@ -527,6 +643,11 @@ class Brief
         }
     }
 
+    /**
+     * Whether this Brief has a valid logger.
+     *
+     * @return boolean
+     */
     public function hasLogger()
     {
         if (isset($this->callables['logger'])) {
