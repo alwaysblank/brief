@@ -97,7 +97,7 @@ $brief = new Brief([
     'a_rose' => 'sweet smell',
 ], [
     'aliases' => [
-        'a_rose' => ['any_other_name'],
+        'a_rose' => 'any_other_name',
     ]
 ]);
 
@@ -110,7 +110,8 @@ $brief->any_other_name;
 
 Aliases are passed through the "settings" array (the optional second argument to a new Brief).
 Use the key `aliases` or `alias` to set any aliases you would like.
-For each key you would like to provide one or more aliases for, make a row in the array you pass to `aliases`, with a key corresponding to the key you'd like to alias to, and a value containing an array of string or a single string that correspond to the alias(es) you want that original key to have.
+
+You can define multiple aliases for a single key at once by passing an array of strings instead of a single string:
 
 [source,php]
 ----
@@ -118,7 +119,7 @@ $brief = new Brief([
     'original_key' => 'value',
 ], [
     'aliases' => [
-        // "Normal" style
+        // "Array" style
         'original_key' => ['another_key', 'another_another_key'],
         // "String" style
         'original_key' => 'yet_another_key',
