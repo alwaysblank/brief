@@ -84,6 +84,69 @@ While `$items` will accept an existing Brief through either method, the behavior
 In many situations the distinction will be academic--you can still get at your data whichever one you use--but the distinction should be kept in mind, especially if you feel you might be using strict comparison on Briefs.
 My recommendation is to simply pick an instantiation method and use that for an entire project, to minimize possible confusion.
 
+== Features
+
+=== Aliasing
+
+You may find yourself in a situation where you want to have multiple keys that point to the same data.
+With aliases, you can accomplish this easily:
+
+[source,php]
+----
+$brief = new Brief([
+    'a_rose' => 'sweet smell',
+], [
+    'aliases' => [
+        'a_rose' => ['any_other_name'],
+    ]
+]);
+
+$brief->a_rose;
+// "sweet smell"
+
+$brief->any_other_name;
+// "sweet smell"
+----
+
+Aliases are passed through the "settings" array (the optional second argument to a new Brief).
+Use the key `aliases` or `alias` to set any aliases you would like.
+For each key you would like to provide one or more aliases for, make a row in the array you pass to `aliases`, with a key corresponding to the key you'd like to alias to, and a value containing an array of string or a single string that correspond to the alias(es) you want that original key to have.
+
+[source,php]
+----
+$brief = new Brief([
+    'original_key' => 'value',
+], [
+    'aliases' => [
+        // "Normal" style
+        'original_key' => ['another_key', 'another_another_key'],
+        // "String" style
+        'original_key' => 'yet_another_key',
+    ]
+]);
+
+$brief->original_key === $brief->another_key === $brief->another_another_key === $brief->yet_another_key;
+// true
+----
+
+Aliases can also be chained to one another, if that's something you feel like doing.
+Brief will make a relatively naive attempt to not get sucked into infinite alias loops, and will simply stop trying to resolve an alias chain if it detects such a loop.
+
+[source,php]
+----
+$brief = new Brief([
+    'a_rose' => 'sweet smell',
+], [
+    'aliases' => [
+        'a_rose' => ['any_other_name'],
+        'any_other_name' => ['montague'],
+    ]
+]);
+
+$brief->a_rose === $brief->montague;
+// true
+----
+
 === Logging
 
 Since the basic concept for Brief is about how either your data exists or doesn't, Brief will not complain loudly if you do something it doesn't like.
