@@ -93,7 +93,7 @@ With aliases, you can accomplish this easily:
 
 [source,php]
 ----
-$brief = new Brief([
+$brief = Brief::make([
     'a_rose' => 'sweet smell',
 ], [
     'aliases' => [
@@ -115,7 +115,7 @@ You can define multiple aliases for a single key at once by passing an array of 
 
 [source,php]
 ----
-$brief = new Brief([
+$brief = Brief::make([
     'original_key' => 'value',
 ], [
     'aliases' => [
@@ -135,7 +135,7 @@ Brief will make a relatively naive attempt to not get sucked into infinite alias
 
 [source,php]
 ----
-$brief = new Brief([
+$brief = Brief::make([
     'a_rose' => 'sweet smell',
 ], [
     'aliases' => [
@@ -160,7 +160,7 @@ To use it, just do the following:
 
 [source,php]
 ----
-$brief = new Brief(
+$brief = Brief::make(
     ['key' => 'value'],
     ['logger' => function($name, $description, $clone, $data) {
         // Do something with this data
@@ -175,7 +175,7 @@ If, for some reason, you need to manually log something to a Brief, you can do s
 
 [source,php]
 ----
-$brief = new Brief(
+$brief = Brief::make(
     ['key' => 'value'],
     ['logger' => function($name, $description, $clone, $data) {
         // Do something with this data
