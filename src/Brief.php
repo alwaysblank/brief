@@ -7,14 +7,14 @@ class Brief
      *
      * @var array
      */
-    private $arguments = [];
+    private $store = [];
 
     /**
      * A limited list of terms that cannot be used as argument keys.
      *
      * @var array|object
      */
-    static $protected = ['protected', 'arguments', 'aliases', 'logger'];
+    static $protected = ['protected', 'store', 'aliases', 'logger', 'callables'];
 
     /**
      * An array of aliases for internal terms. The key is the alias; the value 
@@ -251,7 +251,7 @@ class Brief
             $key = $this->getAuthoritativeName($key) ?? $key;
         }
 
-        $this->arguments[$key] = [
+        $this->store[$key] = [
             'value' => $value,
             'order' => $order
         ];
@@ -303,7 +303,7 @@ class Brief
      */
     public function __isset($name)
     {
-        return in_array($name, array_keys($this->arguments));
+        return in_array($name, array_keys($this->store));
     }
 
     /**
@@ -342,8 +342,8 @@ class Brief
      */
     protected function getArgument($name)
     {
-        return isset($this->arguments[$name])
-            ? $this->getValue($this->arguments[$name])
+        return isset($this->store[$name])
+            ? $this->getValue($this->store[$name])
             : null;
     }
 
@@ -361,7 +361,7 @@ class Brief
      */
     protected function getAuthoritativeName($name)
     {
-        if (isset($this->arguments[$name])) {
+        if (isset($this->store[$name])) {
             return $name;
         }
 
@@ -388,9 +388,9 @@ class Brief
      *
      * @return array
      */
-    protected function getArgumentsSortedByOrder()
+    protected function getDataSortedByOrder()
     {
-        $rekeyed = array_column($this->arguments, null, 'order');
+        $rekeyed = array_column($this->store, null, 'order');
         ksort($rekeyed);
 
         return $rekeyed;
@@ -408,7 +408,7 @@ class Brief
      */
     protected function getOrderLimit(string $which = 'start', string $attribute = null)
     {
-        $ordered = $this->getArgumentsSortedByOrder();
+        $ordered = $this->getDataSortedByOrder();
         if ('start' === $which) {
             $limit = reset($ordered);
         } else { // i.e. 'end'
@@ -462,7 +462,7 @@ class Brief
      */
     protected function getFilledOrdered($fill = null)
     {
-        $orders = $this->getArgumentsSortedByOrder();
+        $orders = $this->getDataSortedByOrder();
 
         return array_map(function ($key) use ($orders, $fill) {
             return $orders[$key] ?? ['order' => $key, 'value' => $fill];
@@ -483,7 +483,7 @@ class Brief
     }
 
     /**
-     * Get all arguments in this Brief as a keyed array.
+     * Get all data in this Brief as a keyed array.
      *
      * @return array
      */
@@ -491,13 +491,13 @@ class Brief
     {
         return array_map(function ($block) {
             return $block['value'];
-        }, $this->arguments);
+        }, $this->store);
     }
 
     /**
      * Pass an unmodified Brief to an callable.
      *
-     * If the callable does not understand Briefs or how to get arguments from 
+     * If the callable does not understand Briefs or how to get properties from 
      * objects, you should probably use `pass()` instead.
      *
      * @param callable $callable
@@ -510,7 +510,7 @@ class Brief
     }
 
     /**
-     * Pass the contents of a Brief as a series of arguments to callable.
+     * Pass the contents of a Brief as a series of arguments to a callable.
      *
      * This method allows for Brief to easily interact with methods that do not 
      * know how to handle it specifically.
@@ -578,8 +578,8 @@ class Brief
     /**
      * Call a callable on each item of this Brief.
      *
-     * This is method is intended for use with keyed arguments. Ordered
-     * arguments may produce strange results.
+     * This is method is intended for use with keyed data. Ordered
+     * data may produce strange results.
      *
      * This acts directly on the Brief on which it is called, and returns that
      * Brief. Be careful; this means that your original Brief is changed. If 
@@ -601,8 +601,8 @@ class Brief
     /**
      * Call a callable on each item of a copy of this Brief.
      *
-     * This is method is intended for use with keyed arguments. Ordered
-     * arguments may produce strange results.
+     * This is method is intended for use with keyed data. Ordered
+     * data may produce strange results.
      *
      * This acts on a copy of the Brief on which it is called, and returns the
      * new Brief, leaving the original unmodified. If you don't want this
@@ -690,7 +690,7 @@ class Brief
     public function export()
     {
         return [
-            'arguments' => $this->arguments,
+            'store' => $this->store,
             'aliases'   => $this->aliases,
             'callables' => $this->callables,
         ];
@@ -710,11 +710,11 @@ class Brief
     protected function import(Brief $items, $settings)
     {
         [
-            'arguments' => $arguments,
+            'store' => $store,
             'aliases'   => $aliases,
             'callables' => $callables
         ] = $items->export();
-        $this->arguments = $arguments;
+        $this->store = $store;
         $this->aliases   = $aliases;
         $this->callables = $callables;
         if (is_array($settings) && count($settings) > 0) {
