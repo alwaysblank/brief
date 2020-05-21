@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace AlwaysBlank\Brief;
 
+use Exception;
 use PHPUnit\Framework\TestCase;
 
 final class BriefTest extends TestCase
@@ -65,7 +66,7 @@ final class BriefTest extends TestCase
     {
 
         $this->expectOutputRegex('/ERR: ProtectedKey :: This key is protected and cannot be used. ::.*/ms');
-        $Brief = Brief::make([], ['logger' => true]);
+        $Brief            = Brief::make([], ['logger' => true]);
         $Brief->protected = 'value';
         var_dump($Brief);
     }
@@ -88,10 +89,10 @@ final class BriefTest extends TestCase
 
     public function testPassingCallableToLoggerCallsThatFunction(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         Brief::make(1, [
             'logger' => function () {
-                throw new \Exception('TestException');
+                throw new Exception('TestException');
             }
         ]);
         $this->expectOutputRegex('/oh shit.*/ms');
@@ -398,7 +399,7 @@ final class BriefTest extends TestCase
     public function testCreateEmptyBrief(): void
     {
         $Empty = Brief::empty();
-        $this->assertInstanceOf(\AlwaysBlank\Brief\EmptyBrief::class, $Empty);
+        $this->assertInstanceOf(EmptyBrief::class, $Empty);
         $this->assertNull($Empty->anything);
     }
 
@@ -441,7 +442,7 @@ final class BriefTest extends TestCase
 
     public function testSetKeyAndValueDynamically(): void
     {
-        $Brief = Brief::make([]);
+        $Brief          = Brief::make([]);
         $Brief->new_key = 'new value';
         $this->assertEquals('new value', $Brief->new_key);
         $this->assertNotEquals('new value', $Brief->any_key);

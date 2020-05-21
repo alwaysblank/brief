@@ -29,7 +29,7 @@ toc::[]
 
 == What Is This?
 
-It's a simple little tool for passing around collections of variable stuctured data.
+It's a simple tool for passing around collections of variable structured data.
 
 90% of the reason I built it was because I got very tired of writing `isset()`, etc, conditionals when _the nonexistence of a key was equivalent to a falsey value in terms of program flow_.
 It grew from there to provide some other functionality related to moving collections of structure data around.
@@ -90,7 +90,7 @@ My recommendation is to simply pick an instantiation method and use that for an 
 
 This is the primary feature of Brief.
 
-Brief expects data in an array, but whether that array is keyed or numeric is up to you. 
+Brief expects data in an array, but whether that array is keyed or numeric is up to you.
 (Or, use a language where arrays aren't as confusing.)
 
 [source,php]
