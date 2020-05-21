@@ -438,6 +438,14 @@ final class BriefTest extends TestCase
         $this->assertNotEquals($Returned, $Brief);
 
     }
+
+    public function testSetKeyAndValueDynamically(): void
+    {
+        $Brief = Brief::make([]);
+        $Brief->new_key = 'new value';
+        $this->assertEquals('new value', $Brief->new_key);
+        $this->assertNotEquals('new value', $Brief->any_key);
+    }
 }
 
 /**

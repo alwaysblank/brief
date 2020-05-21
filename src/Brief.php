@@ -432,9 +432,10 @@ class Brief
         if (is_int($key)) {
             $this->storeSingle($value, (string)$key, $key);
         } elseif (is_string($key)) {
+            $authoritativeName = $this->getAuthoritativeName($key);
             $this->storeSingle(
-                $value, 
-                $this->getAuthoritativeName($key), 
+                $value,
+                $authoritativeName ?? $key,
                 $this->getIncrementedOrder()
             );
         }
