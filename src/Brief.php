@@ -141,6 +141,9 @@ class Brief
                 case 'logger':
                     $this->setUpLogger($arg);
                     break;
+                case 'isEmpty':
+                    $this->setUpIsEmpty($arg);
+                    break;
             }
         }
     }
@@ -166,6 +169,20 @@ class Brief
             $this->callables['logger'] = $callable;
         } elseif (true === $callable) {
             $this->callables['logger'] = true; // Use system `error_log()`
+        }
+    }
+
+    /**
+     * Attach isEmpty text to Brief, if valid.
+     *
+     * This callable will be passed a copy of the Brief to evaluate.
+     *
+     * @param $callable
+     */
+    protected function setUpIsEmpty($callable)
+    {
+        if (is_callable($callable)) {
+            $this->callables['isEmpty'] = $callable;
         }
     }
 
@@ -838,5 +855,39 @@ class Brief
         }
 
         return $this;
+    }
+
+    /**
+     * Determines whether the Brief is empty.
+     *
+     * The default test is somewhat naive, but you can pass your own test via
+     * the `isEmpty` setting on instantiation.
+     *
+     * @return bool|mixed
+     */
+    public function isEmpty()
+    {
+        $Clone = clone $this;
+
+        if (isset($this->callables['isEmpty']) && is_callable($this->callables['isEmpty'])) {
+            $result = call_user_func($this->callables['isEmpty'], $Clone);
+            unset($Clone);
+
+            return $result;
+        }
+
+        return count(array_filter(array_column($this->store, 'value'), function ($value) {
+                return $value !== null;
+            })) < 1;
+    }
+
+    /**
+     * If the Brief is *not* empty.
+     *
+     * @return bool
+     */
+    public function isNotEmpty()
+    {
+        return !$this->isEmpty();
     }
 }

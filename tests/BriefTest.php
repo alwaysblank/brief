@@ -447,6 +447,39 @@ final class BriefTest extends TestCase
         $this->assertEquals('new value', $Brief->new_key);
         $this->assertNotEquals('new value', $Brief->any_key);
     }
+
+    public function testCanDetermineEmptyBriefs(): void
+    {
+        $Brief = Brief::make([]);
+        $this->assertTrue($Brief->isEmpty());
+        $this->assertFalse($Brief->isNotEmpty());
+
+        $SortOfEmpty = Brief::make([
+            'key' => null,
+        ]);
+        $this->assertTrue($SortOfEmpty->isEmpty());
+        $this->assertFalse($SortOfEmpty->isNotEmpty());
+
+        $NotActuallyEmpty = Brief::make([
+            'key' => false,
+        ]);
+        $this->assertFalse($NotActuallyEmpty->isEmpty());
+        $this->assertTrue($NotActuallyEmpty->isNotEmpty());
+    }
+
+    public function testCanUserCustomEmptyFunction(): void
+    {
+        $test = function(Brief $brief) {
+            return count(array_filter($brief->getKeyed())) < 1;
+        };
+        $Brief = Brief::make([], ['isEmpty' => $test]);
+        $this->assertTrue($Brief->isEmpty());
+
+        $Brieful = Brief::make([
+            'key' => 'value',
+        ], ['isEmpty' => $test]);
+        $this->assertFalse($Brieful->isEmpty());
+    }
 }
 
 /**

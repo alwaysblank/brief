@@ -169,6 +169,25 @@ $brief->a_rose === $brief->montague;
 // true
 ----
 
+=== Custom Empty Test
+
+Brief comes with `isEmpty()` and `isNotEmpty()` which somewhat naively test if the Brief is empty
+(they examine only whether top-level items in the array are not equal to `null`).
+If your use case requires a more robust test, you can pass that test to the `isEmpty` parameter at instantiation.
+It accepts anything PHP considers callable.
+
+[source,php]
+----
+$brief = Brief::make([
+    ['key' => 'value'],
+    ['isEmpty' => function($brief) {
+        // some logic
+    }]
+);
+
+$brief->isEmpty(); // false (hopefully)
+----
+
 === Logging
 
 Since the basic concept for Brief is about how either your data exists or doesn't, Brief will not complain loudly if you do something it doesn't like.
