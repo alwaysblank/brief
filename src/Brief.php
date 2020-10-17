@@ -34,7 +34,7 @@ class Brief
      *
      * @var array
      */
-    private $callables = [];
+    private $callables;
 
     /**
      * Brief constructor.
@@ -44,6 +44,8 @@ class Brief
      */
     public function __construct($items = null, array $settings = [])
     {
+        $this->callables = new Workers();
+
         if (is_a($items, self::class)) {
             $this->import($items, $settings);
         } else {
@@ -166,9 +168,13 @@ class Brief
     protected function setUpLogger($callable)
     {
         if (is_callable($callable)) {
-            $this->callables['logger'] = $callable;
+            $this->callables->add('logger', $callable);
         } elseif (true === $callable) {
-            $this->callables['logger'] = true; // Use system `error_log()`
+            // Use system error_log
+            $this->callables->add('logger', function($name, $description, $clone, $data) {
+                $message = join(' :: ', array_filter([$name, $description, var_export($data, true)]));
+                error_log($message, 0);
+            });
         }
     }
 
@@ -182,7 +188,7 @@ class Brief
     protected function setUpIsEmpty($callable)
     {
         if (is_callable($callable)) {
-            $this->callables['isEmpty'] = $callable;
+            $this->callables->add('isEmpty', $callable);
         }
     }
 
@@ -321,13 +327,8 @@ class Brief
             return;
         }
 
-        if (is_callable($this->callables['logger'])) {
-            $clone = clone $this;
-            call_user_func($this->callables['logger'], $name, $description, $clone, $data);
-        } elseif (true === $this->callables['logger']) {
-            $message = join(' :: ', array_filter([$name, $description, var_export($data, true)]));
-            error_log($message, 0);
-        }
+        $clone = clone $this;
+        $this->callables->call('logger', $name, $description, $clone, $data);
     }
 
     /**
@@ -337,11 +338,7 @@ class Brief
      */
     public function hasLogger()
     {
-        if (isset($this->callables['logger'])) {
-            return true === $this->callables['logger'] || is_callable($this->callables['logger']);
-        }
-
-        return false;
+        return $this->callables->isCallable('logger');
     }
 
     /**
@@ -869,11 +866,8 @@ class Brief
     {
         $Clone = clone $this;
 
-        if (isset($this->callables['isEmpty']) && is_callable($this->callables['isEmpty'])) {
-            $result = call_user_func($this->callables['isEmpty'], $Clone);
-            unset($Clone);
-
-            return $result;
+        if ($this->callables->isCallable('isEmpty')) {
+            return $this->callables->call('isEmpty', $Clone);
         }
 
         return count(array_filter(array_column($this->store, 'value'), function ($value) {
