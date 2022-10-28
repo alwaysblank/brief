@@ -903,4 +903,23 @@ class Brief
 
         return null;
     }
+
+    /**
+     * Remove data from the Brief.
+     *
+     * This will resolve aliases and delete the data they point to,
+     * but *not* the aliases themselves.
+     *
+     * @param $key
+     *
+     * @return void
+     */
+    public function delete($key) {
+        $internalKey = $this->resolveInternalKey($key);
+        if ($internalKey === null) {
+            // Doesn't exist, so nothing to do.
+            return;
+        }
+        unset($this->store[$internalKey]);
+    }
 }

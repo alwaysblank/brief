@@ -480,6 +480,18 @@ final class BriefTest extends TestCase
         ], ['isEmpty' => $test]);
         $this->assertFalse($Brieful->isEmpty());
     }
+
+    public function testCanDeleteDataFromBrief(): void {
+        $Brief = Brief::make(['key' => 'value']);
+        $this->assertEquals('value', $Brief->key);
+        $Brief->delete('key');
+        $this->assertNull($Brief->value);
+        $NumericBrief = Brief::make(['value', 'not-value']);
+        $this->assertEquals('value', $NumericBrief->_0);
+        $NumericBrief->delete(0);
+        $this->assertNull($NumericBrief->_0);
+
+    }
 }
 
 /**
