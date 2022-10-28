@@ -644,13 +644,14 @@ class Brief
      */
     public function get($key)
     {
-        if (is_int($key)) {
-            return $this->getByOrder($key);
-        } elseif (is_string($key)) {
-            return $this->getByKey($this->getAuthoritativeName($key));
+        $internalKey = $this->resolveInternalKey($key);
+        if ($internalKey === null) {
+            return null;
         }
 
-        return null;
+        return is_int($internalKey)
+            ? $this->getByOrder($internalKey)
+            : $this->getByKey($internalKey);
     }
 
     /**
