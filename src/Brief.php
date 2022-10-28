@@ -1,6 +1,6 @@
 <?php namespace AlwaysBlank\Brief;
 
-class Brief
+class Brief implements \ArrayAccess
 {
     /**
      * A limited list of terms that cannot be used as argument keys.
@@ -922,4 +922,66 @@ class Brief
         }
         unset($this->store[$internalKey]);
     }
+
+	/**
+	 * Whether a offset exists
+	 * @link https://php.net/manual/en/arrayaccess.offsetexists.php
+	 *
+	 * @param mixed $offset <p>
+	 * An offset to check for.
+	 * </p>
+	 *
+	 * @return bool true on success or false on failure.
+	 * </p>
+	 * <p>
+	 * The return value will be casted to boolean if non-boolean was returned.
+	 */
+	public function offsetExists( $offset ) {
+		return $this->get($offset) !== null;
+	}
+
+	/**
+	 * Offset to retrieve
+	 * @link https://php.net/manual/en/arrayaccess.offsetget.php
+	 *
+	 * @param mixed $offset <p>
+	 * The offset to retrieve.
+	 * </p>
+	 *
+	 * @return TValue Can return all value types.
+	 */
+	public function offsetGet( $offset ) {
+		return $this->get($offset);
+	}
+
+	/**
+	 * Offset to set
+	 * @link https://php.net/manual/en/arrayaccess.offsetset.php
+	 *
+	 * @param TKey   $offset <p>
+	 * The offset to assign the value to.
+	 * </p>
+	 * @param TValue $value <p>
+	 * The value to set.
+	 * </p>
+	 *
+	 * @return void
+	 */
+	public function offsetSet( $offset, $value ) {
+		$this->set($offset, $value);
+	}
+
+	/**
+	 * Offset to unset
+	 * @link https://php.net/manual/en/arrayaccess.offsetunset.php
+	 *
+	 * @param TKey $offset <p>
+	 * The offset to unset.
+	 * </p>
+	 *
+	 * @return void
+	 */
+	public function offsetUnset($offset){
+        $this->delete($oddffset);
+	}
 }

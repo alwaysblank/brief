@@ -492,6 +492,15 @@ final class BriefTest extends TestCase
         $this->assertNull($NumericBrief->_0);
 
     }
+
+    public function testAccessAsArray(): void {
+        $Brief = Brief::make(['key' => 'value']);
+        $this->assertEquals('value', $Brief['key']);
+        $NumericBrief = Brief::make(['value', 'not-value']);
+        $this->assertEquals('value', $NumericBrief[0]);
+        $NumericBrief[1] = 'another-value';
+        $this->assertEquals('another-value', $NumericBrief[1]);
+    }
 }
 
 /**
