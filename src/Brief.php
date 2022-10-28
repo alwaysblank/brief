@@ -884,4 +884,22 @@ class Brief
     {
         return !$this->isEmpty();
     }
+
+    /**
+     * This returns the *internal* key used to store this data.
+     *
+     * @param string|int $key
+     *
+     * @return string|int|null
+     */
+    protected function resolveInternalKey($key) {
+        if (is_int($key)) {
+            $ordered = $this->getOrdered();
+            return isset($ordered[$key]) ? $key : null;
+        } elseif (is_string($key)) {
+            return $this->getAuthoritativeName($key);
+        }
+
+        return null;
+    }
 }
