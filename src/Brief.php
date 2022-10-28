@@ -644,13 +644,14 @@ class Brief
      */
     public function get($key)
     {
-        if (is_int($key)) {
-            return $this->getByOrder($key);
-        } elseif (is_string($key)) {
-            return $this->getByKey($this->getAuthoritativeName($key));
+        $internalKey = $this->resolveInternalKey($key);
+        if ($internalKey === null) {
+            return null;
         }
 
-        return null;
+        return is_int($internalKey)
+            ? $this->getByOrder($internalKey)
+            : $this->getByKey($internalKey);
     }
 
     /**
@@ -883,5 +884,23 @@ class Brief
     public function isNotEmpty()
     {
         return !$this->isEmpty();
+    }
+
+    /**
+     * This returns the *internal* key used to store this data.
+     *
+     * @param string|int $key
+     *
+     * @return string|int|null
+     */
+    protected function resolveInternalKey($key) {
+        if (is_int($key)) {
+            $ordered = $this->getOrdered();
+            return isset($ordered[$key]) ? $key : null;
+        } elseif (is_string($key)) {
+            return $this->getAuthoritativeName($key);
+        }
+
+        return null;
     }
 }
