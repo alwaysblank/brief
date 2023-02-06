@@ -982,6 +982,6 @@ class Brief implements \ArrayAccess
 	 * @return void
 	 */
 	public function offsetUnset($offset){
-        $this->delete($oddffset);
+        $this->delete($offset);
 	}
 }
