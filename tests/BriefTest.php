@@ -490,7 +490,13 @@ final class BriefTest extends TestCase
         $this->assertEquals('value', $NumericBrief->_0);
         $NumericBrief->delete(0);
         $this->assertNull($NumericBrief->_0);
-
+	    /**
+	     * There's no way to verify that something that doesn't exist was
+	     * or wasn't deleted, but we try to make sure no errors are thrown.
+	     */
+	    $this->assertNull($Brief[new \stdClass()]);
+	    $Brief->delete(new \stdClass());
+		$this->assertNull($Brief[new \stdClass()]);
     }
 
     public function testAccessAsArray(): void {
@@ -501,6 +507,13 @@ final class BriefTest extends TestCase
         $NumericBrief[1] = 'another-value';
         $this->assertEquals('another-value', $NumericBrief[1]);
     }
+
+	public function testOffsetMehtods(): void {
+		$Brief = Brief::make(['key' => 'value']);
+		$this->assertTrue($Brief->offsetExists('key'));
+		$Brief->offsetUnset('key');
+		$this->assertFalse($Brief->offsetExists('key'));
+	}
 }
 
 /**
