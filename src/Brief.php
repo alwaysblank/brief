@@ -289,17 +289,7 @@ class Brief implements \ArrayAccess
             return false;
         }
 
-        $authoritative = $this->collapseAliasChain($alias);
-
-        // Check resolved value for allowable keys
-        if (false === $this::isKeyAllowed($authoritative)) {
-            $this->log('ProtectedKey', 'This key is protected and cannot be used.',
-                ['key' => $authoritative, 'protected_keys' => self::$protected]);
-
-            return false;
-        }
-
-        return $authoritative;
+        return $this->collapseAliasChain($alias);
     }
 
     /**
